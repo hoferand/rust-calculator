@@ -14,7 +14,7 @@ fn main() {
 			}
 
 			// evaluate line
-			print!("= {}\n\n", calculator::evaluate(input));
+			print!("= {}\n\n", calculator::calculate(input));
 		}
 
 		print!("> ");

@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TokenType {
 	Number,
 	AddOperator,
@@ -8,7 +8,7 @@ pub enum TokenType {
 	EOF,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Token {
 	pub token_type: TokenType,
 	pub value: String,
@@ -65,4 +65,108 @@ pub fn tokenize(input: String) -> Vec<Token> {
 	});
 
 	return tokens;
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_01_blank_input() {
+		assert_eq!(
+			tokenize(String::from("   \n\n   \t\t		")),
+			vec![Token {
+				token_type: TokenType::EOF,
+				value: String::from("EOF")
+			}]
+		);
+	}
+
+	#[test]
+	fn test_02_numerical_literal() {
+		assert_eq!(
+			tokenize(String::from("9 44.4")),
+			vec![
+				Token {
+					token_type: TokenType::Number,
+					value: String::from("9")
+				},
+				Token {
+					token_type: TokenType::Number,
+					value: String::from("44.4")
+				},
+				Token {
+					token_type: TokenType::EOF,
+					value: String::from("EOF")
+				}
+			]
+		);
+	}
+
+	#[test]
+	fn test_03_add_operator_literal() {
+		assert_eq!(
+			tokenize(String::from("+-")),
+			vec![
+				Token {
+					token_type: TokenType::AddOperator,
+					value: String::from("+")
+				},
+				Token {
+					token_type: TokenType::AddOperator,
+					value: String::from("-")
+				},
+				Token {
+					token_type: TokenType::EOF,
+					value: String::from("EOF")
+				}
+			]
+		);
+	}
+
+	#[test]
+	fn test_04_mul_operator_literal() {
+		assert_eq!(
+			tokenize(String::from("*/%")),
+			vec![
+				Token {
+					token_type: TokenType::MulOperator,
+					value: String::from("*")
+				},
+				Token {
+					token_type: TokenType::MulOperator,
+					value: String::from("/")
+				},
+				Token {
+					token_type: TokenType::MulOperator,
+					value: String::from("%")
+				},
+				Token {
+					token_type: TokenType::EOF,
+					value: String::from("EOF")
+				}
+			]
+		);
+	}
+
+	#[test]
+	fn test_05_bracket_literal() {
+		assert_eq!(
+			tokenize(String::from("()")),
+			vec![
+				Token {
+					token_type: TokenType::OpenBracket,
+					value: String::from("(")
+				},
+				Token {
+					token_type: TokenType::CloseBracket,
+					value: String::from(")")
+				},
+				Token {
+					token_type: TokenType::EOF,
+					value: String::from("EOF")
+				}
+			]
+		);
+	}
 }
