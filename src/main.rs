@@ -33,7 +33,7 @@ fn main() {
 
 			// evaluate line
 			let mut tokens = tokenize(input);
-			println!("= {}", evaluate_additive(&mut tokens));
+			print!("= {}\n\n", evaluate_additive(&mut tokens));
 		}
 
 		print!("> ");
@@ -133,6 +133,13 @@ fn evaluate_atomic(tokens: &mut Vec<Token>) -> f32 {
 	let token = tokens.remove(0);
 	match token.token_type {
 		TokenType::Number => token.value.parse().unwrap(),
+		TokenType::AddOperator => {
+			match token.value.as_str() {
+				"+" => evaluate_atomic(tokens),
+				"-" => -evaluate_atomic(tokens),
+				_ => panic!("Unexpected operator found!"), // should never happen
+			}
+		}
 		TokenType::OpenBracket => {
 			let value = evaluate_additive(tokens);
 			let bracket = tokens.remove(0); // remove )
