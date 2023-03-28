@@ -40,7 +40,7 @@ fn test_03_additive() {
 }
 
 #[test]
-fn test_03_multiplicative() {
+fn test_04_multiplicative() {
 	assert_eq!(calculate(String::from("0 * 0")), 0.0);
 	assert_eq!(calculate(String::from("4 * 3")), 12.0);
 	assert_eq!(calculate(String::from("4.5 * 3")), 13.5);
@@ -55,7 +55,7 @@ fn test_03_multiplicative() {
 }
 
 #[test]
-fn test_03_operation_order() {
+fn test_05_operation_order() {
 	assert_eq!(calculate(String::from("3 + 4 * 5")), 23.0);
 	assert_eq!(calculate(String::from("3 * 4 + 5")), 17.0);
 
@@ -64,7 +64,7 @@ fn test_03_operation_order() {
 }
 
 #[test]
-fn test_03_brackets() {
+fn test_06_brackets() {
 	assert_eq!(calculate(String::from("(3 + 4) * 5")), 35.0);
 	assert_eq!(calculate(String::from("3 * (4 + 5)")), 27.0);
 

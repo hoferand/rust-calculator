@@ -420,7 +420,7 @@ mod tests {
 
 	#[test]
 	#[should_panic]
-	fn test_06_panic() {
+	fn test_05_panic() {
 		evaluate(&mut vec![Token {
 			token_type: TokenType::EOF,
 			value: String::from("EOF"),
@@ -429,7 +429,7 @@ mod tests {
 
 	#[test]
 	#[should_panic]
-	fn test_07_panic() {
+	fn test_06_panic() {
 		evaluate(&mut vec![
 			Token {
 				token_type: TokenType::MulOperator,
@@ -444,7 +444,7 @@ mod tests {
 
 	#[test]
 	#[should_panic]
-	fn test_08_panic() {
+	fn test_07_panic() {
 		evaluate(&mut vec![
 			Token {
 				token_type: TokenType::Number,
@@ -463,7 +463,7 @@ mod tests {
 
 	#[test]
 	#[should_panic]
-	fn test_09_panic() {
+	fn test_08_panic() {
 		evaluate(&mut vec![
 			Token {
 				token_type: TokenType::OpenBracket,
