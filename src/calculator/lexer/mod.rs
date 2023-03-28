@@ -1,18 +1,5 @@
-#[derive(Debug, PartialEq)]
-pub enum TokenType {
-	Number,
-	AddOperator,
-	MulOperator,
-	OpenBracket,
-	CloseBracket,
-	EOF,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Token {
-	pub token_type: TokenType,
-	pub value: String,
-}
+pub mod token;
+pub use token::{Token, TokenType};
 
 pub fn tokenize(input: String) -> Vec<Token> {
 	let mut tokens: Vec<Token> = Vec::new();
