@@ -1,7 +1,7 @@
 pub mod token;
 pub use token::{Token, TokenType};
 
-pub fn tokenize(input: String) -> Vec<Token> {
+pub fn tokenize(input: String) -> Result<Vec<Token>, String> {
 	let mut tokens: Vec<Token> = Vec::new();
 	let mut chars: Vec<char> = input.chars().collect();
 	while !chars.is_empty() {
@@ -43,7 +43,10 @@ pub fn tokenize(input: String) -> Vec<Token> {
 				value: value,
 			});
 		} else {
-			panic!("Unexpected character found: {}!", chars.first().unwrap());
+			return Err(format!(
+				"Unexpected character found: {}!",
+				chars.first().unwrap()
+			));
 		}
 	}
 	tokens.push(Token {
@@ -51,7 +54,7 @@ pub fn tokenize(input: String) -> Vec<Token> {
 		value: String::from("EOF"),
 	});
 
-	return tokens;
+	return Ok(tokens);
 }
 
 #[cfg(test)]
@@ -61,7 +64,7 @@ mod tests {
 	#[test]
 	fn test_01_blank_input() {
 		assert_eq!(
-			tokenize(String::from("   \n\n   \t\t		")),
+			tokenize(String::from("   \n\n   \t\t		")).unwrap(),
 			vec![Token {
 				token_type: TokenType::EOF,
 				value: String::from("EOF")
@@ -72,7 +75,7 @@ mod tests {
 	#[test]
 	fn test_02_numerical_literal() {
 		assert_eq!(
-			tokenize(String::from("9 44.4")),
+			tokenize(String::from("9 44.4")).unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::Number,
@@ -93,7 +96,7 @@ mod tests {
 	#[test]
 	fn test_03_add_operator_literal() {
 		assert_eq!(
-			tokenize(String::from("+-")),
+			tokenize(String::from("+-")).unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::AddOperator,
@@ -114,7 +117,7 @@ mod tests {
 	#[test]
 	fn test_04_mul_operator_literal() {
 		assert_eq!(
-			tokenize(String::from("*/%")),
+			tokenize(String::from("*/%")).unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::MulOperator,
@@ -139,7 +142,7 @@ mod tests {
 	#[test]
 	fn test_05_bracket_literal() {
 		assert_eq!(
-			tokenize(String::from("()")),
+			tokenize(String::from("()")).unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::OpenBracket,
@@ -155,5 +158,13 @@ mod tests {
 				}
 			]
 		);
+	}
+
+	#[test]
+	fn test_06_error() {
+		match tokenize(String::from("a")) {
+			Ok(_) => assert!(false),
+			Err(_) => assert!(true),
+		}
 	}
 }

@@ -14,7 +14,10 @@ fn main() {
 			}
 
 			// evaluate line
-			print!("= {}\n\n", calculator::calculate(input));
+			match calculator::calculate(input) {
+				Ok(result) => print!("= {}\n\n", result),
+				Err(e) => print!("Error: {}\n\n", e),
+			}
 		}
 
 		print!("> ");
