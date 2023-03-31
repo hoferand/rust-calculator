@@ -5,6 +5,8 @@ pub enum TokenType {
 	MulOperator,
 	OpenBracket,
 	CloseBracket,
+	Identifier,
+	Equals,
 	EOF,
 }
 
