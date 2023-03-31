@@ -87,14 +87,60 @@ The brackets can be nested arbitrarily `(( ... ) + ( ... ))`.
 You can apply signs multiple times like `--4` which evaluates to `4`.
 
 
+### Variables
+
+It is also possible to use variables to store results and reuse it in other calculations.
+```
+> a = 5 * 6
+= 30
+
+> a / 4
+= 7.5
+
+> b / 3
+Error: Variable not found [b]!
+```
+
+Predefined variables:
+ - Pi: `pi`
+ - Euler number: `e`
+
+
+### Functions
+
+Functions can not be defined by yourself but there are some predefined:
+ - Square root: `sqrt`
+ - Sinus: `sin`
+ - Arcus-Sinus: `asin`
+ - Cosinus: `cos`
+ - Arcus-Cosinus: `acos`
+ - Tangens: `tan`
+ - Arcus-Tangens: `atan`
+ - Radiant to Degrees: `r2d`
+ - Degrees to Radiant: `d2r`
+
+**All trigonometric functions uses radiants.**
+
+```
+> sqrt 4
+= 2
+
+> sqrt 100 + 2
+= 12
+```
+
+
+
 ### Operation Order
 
- 1. Brackets
- 2. Signs
- 3. Multiplicative Operators: `* / %`
- 4. Additional Operators: `+ -`
+ 1. Numbers / Variables: `3`, `4.5`, `var`, etc
+ 2. Brackets: `( ... )`
+ 3. Signs: `+`, `-`
+ 4. Function calls: `sqrt`, `sin`, etc
+ 5. Multiplicative Operators: `*`, `/`, `%`
+ 6. Additions Operators: `+`,` -`
 
-So `5 + -4 * 5` is evaluated as `5 + ((-4) * 5)`.
+So `5 + -4 * 5 + sqrt 100 + 12` is evaluated as `5 + ((-4) * 5) + (sqrt 100) + 12`.
 
 
 

@@ -30,7 +30,7 @@ impl Environment {
 		self.variables.insert(String::from("e"), Variable::Var(E));
 
 		self.variables
-			.insert(String::from("sqrt"), Variable::Fn(|x| x.sqrt()));
+			.insert(String::from("sqrt"), Variable::Fn(|x| x.sqrt().round()));
 		self.variables
 			.insert(String::from("sin"), Variable::Fn(|x| x.sin()));
 		self.variables
@@ -44,9 +44,9 @@ impl Environment {
 		self.variables
 			.insert(String::from("atan"), Variable::Fn(|x| x.atan()));
 		self.variables
-			.insert(String::from("r2d"), Variable::Fn(|x| (x * PI) / 180.0));
+			.insert(String::from("r2d"), Variable::Fn(|x| (x * 180.0) / PI));
 		self.variables
-			.insert(String::from("d2r"), Variable::Fn(|x| (x * 180.0) / PI));
+			.insert(String::from("d2r"), Variable::Fn(|x| (x * PI) / 180.0));
 	}
 }
 
