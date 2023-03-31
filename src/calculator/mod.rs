@@ -43,7 +43,12 @@ fn evaluate_multiplicative(tokens: &mut Vec<Token>) -> Result<f32, String> {
 		let right = evaluate_atomic(tokens)?;
 		match operator.value.as_str() {
 			"*" => left *= right,
-			"/" => left /= right,
+			"/" => {
+				if right == 0.0 {
+					return Err(String::from("Division by 0!"));
+				}
+				left /= right
+			},
 			"%" => left %= right,
 			_ => return invalid_operator(operator.value), // should never happen
 		}
@@ -505,6 +510,31 @@ mod tests {
 			Token {
 				token_type: TokenType::OpenBracket,
 				value: String::from("("),
+			},
+			Token {
+				token_type: TokenType::EOF,
+				value: String::from("EOF"),
+			},
+		]) {
+			Ok(_) => assert!(false),
+			Err(_) => assert!(true),
+		}
+	}
+
+	#[test]
+	fn test_09_error() {
+		match evaluate(&mut vec![
+			Token {
+				token_type: TokenType::Number,
+				value: String::from("4"),
+			},
+			Token {
+				token_type: TokenType::MulOperator,
+				value: String::from("/"),
+			},
+			Token {
+				token_type: TokenType::Number,
+				value: String::from("0"),
 			},
 			Token {
 				token_type: TokenType::EOF,
