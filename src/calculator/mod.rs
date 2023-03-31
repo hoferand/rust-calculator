@@ -11,7 +11,7 @@ fn evaluate(tokens: &mut Vec<Token>) -> Result<f32, String> {
 
 	let token = tokens.remove(0);
 	if !matches!(token.token_type, TokenType::EOF) {
-		return Err(format!("Unexpected token found {}!", token.value));
+		return unexpected_token(token.value);
 	}
 
 	return Ok(result);
@@ -27,7 +27,7 @@ fn evaluate_additive(tokens: &mut Vec<Token>) -> Result<f32, String> {
 		match operator.value.as_str() {
 			"+" => left += right,
 			"-" => left -= right,
-			_ => return Err(format!("Unexpected operator found {}!", operator.value)), // should never happen
+			_ => return invalid_operator(operator.value), // should never happen
 		}
 	}
 
@@ -45,7 +45,7 @@ fn evaluate_multiplicative(tokens: &mut Vec<Token>) -> Result<f32, String> {
 			"*" => left *= right,
 			"/" => left /= right,
 			"%" => left %= right,
-			_ => return Err(format!("Unexpected operator found {}!", operator.value)), // should never happen
+			_ => return invalid_operator(operator.value), // should never happen
 		}
 	}
 
@@ -61,19 +61,27 @@ fn evaluate_atomic(tokens: &mut Vec<Token>) -> Result<f32, String> {
 			match operator.value.as_str() {
 				"+" => evaluate_atomic(tokens),
 				"-" => Ok(-(evaluate_atomic(tokens)?)),
-				_ => Err(format!("Unexpected operator found {}!", operator.value)), // should never happen
+				_ => invalid_operator(operator.value), // should never happen
 			}
 		}
 		TokenType::OpenBracket => {
 			let value = evaluate_additive(tokens);
 			let bracket = tokens.remove(0); // remove )
 			if !matches!(bracket.token_type, TokenType::CloseBracket) {
-				return Err(format!("Unexpected token found {}!", bracket.value));
+				return unexpected_token(bracket.value);
 			}
 			value
 		}
-		_ => Err(format!("Unexpected token found {}!", token.value)),
+		_ => unexpected_token(token.value),
 	}
+}
+
+fn invalid_operator(value: String) -> Result<f32, String> {
+	Err(format!("Invalid operator found [{}]!", value))
+}
+
+fn unexpected_token(value: String) -> Result<f32, String> {
+	Err(format!("Unexpected token found [{}]!", value))
 }
 
 #[cfg(test)]

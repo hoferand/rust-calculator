@@ -9,9 +9,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, String> {
 			// ignore spaces, new lines and tabs
 			chars.remove(0);
 			continue;
-		}
-
-		if chars.first().unwrap() == &'(' {
+		} else if chars.first().unwrap() == &'(' {
 			tokens.push(Token {
 				token_type: TokenType::OpenBracket,
 				value: String::from(chars.remove(0)),
@@ -44,7 +42,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, String> {
 			});
 		} else {
 			return Err(format!(
-				"Unexpected character found: {}!",
+				"Unexpected character found [{}]!",
 				chars.first().unwrap()
 			));
 		}
