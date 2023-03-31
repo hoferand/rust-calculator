@@ -236,10 +236,10 @@ mod tests {
 	}
 
 	#[test]
-	fn test_08_error() {
+	fn test_08_invalid_character() {
 		match tokenize(String::from("<")) {
-			Ok(_) => assert!(false),
 			Err(_) => assert!(true),
+			_ => assert!(false),
 		}
 	}
 }

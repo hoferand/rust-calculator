@@ -7,8 +7,11 @@ fn main() {
 	print!("> ");
 	stdout().flush().expect("");
 
-	// read expressions
+	// initialize environment
 	let mut env = environment::new();
+	env.init();
+
+	// read expressions
 	for input in io::stdin().lock().lines() {
 		if let Ok(input) = input {
 			if input.is_empty() {

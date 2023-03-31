@@ -237,3 +237,21 @@ fn test_06_brackets() {
 		5.0
 	);
 }
+
+#[test]
+fn test_07_variables() {
+	let mut env = calculator::environment::new();
+	assert_eq!(calculate(String::from("a = 5"), &mut env).unwrap(), 5.0);
+	assert_eq!(calculate(String::from("a * 10"), &mut env).unwrap(), 50.0);
+}
+
+#[test]
+fn test_08_function_calls() {
+	let mut env = calculator::environment::new();
+	env.init();
+	assert_eq!(calculate(String::from("sqrt 16"), &mut env).unwrap(), 4.0);
+	assert_eq!(
+		calculate(String::from("sqrt 16 * 5"), &mut env).unwrap(),
+		20.0
+	);
+}
