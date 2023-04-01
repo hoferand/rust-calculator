@@ -47,7 +47,9 @@ Simple calculator in Rust
 = -85.5
 
 > (5 + 5(       
-Error: Unexpected token found [(]!
+Error: Unexpected token `(` found!
+ | (5 + 5(
+ |       ^
 
 >
 ```
@@ -89,7 +91,8 @@ You can apply signs multiple times like `--4` which evaluates to `4`.
 
 ### Variables
 
-It is also possible to use variables to store results and reuse it in other calculations.
+It is also possible to use variables to store results and reuse it in other calculations.  
+The variable names may only consist of letters `a-zA-Z` and numbers `0-9`, but cannot start with a number.
 ```
 > a = 5 * 6
 = 30
@@ -97,8 +100,10 @@ It is also possible to use variables to store results and reuse it in other calc
 > a / 4
 = 7.5
 
-> b / 3
-Error: Variable not found [b]!
+> xyz / 3
+Error: Variable `xyz` not found!
+ | xyz / 3
+ | ^^^
 ```
 
 Predefined variables:

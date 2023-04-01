@@ -17,12 +17,8 @@ impl Environment {
 		value
 	}
 
-	pub fn get(&mut self, key: String) -> Result<&Variable, String> {
-		let value = self.variables.get(&key);
-		match value {
-			Some(value) => Ok(value),
-			None => Err(format!("Variable not found [{}]!", key)),
-		}
+	pub fn get(&mut self, key: String) -> Option<&Variable> {
+		return self.variables.get(&key);
 	}
 
 	pub fn init(&mut self) {
@@ -65,7 +61,7 @@ mod tests {
 		let mut env = new();
 		assert_eq!(env.assign(String::from("var1"), 34.5), 34.5);
 		match env.get(String::from("var1")) {
-			Ok(val) => match val {
+			Some(val) => match val {
 				Variable::Var(val) => assert_eq!(*val, 34.5),
 				_ => assert!(false),
 			},
@@ -77,7 +73,7 @@ mod tests {
 	fn test_02_get_undefined() {
 		let mut env = new();
 		match env.get(String::from("xyz")) {
-			Err(_) => assert!(true),
+			None => assert!(true),
 			_ => assert!(false),
 		}
 	}
@@ -87,7 +83,7 @@ mod tests {
 		let mut env = new();
 		env.init();
 		match env.get(String::from("pi")) {
-			Ok(val) => match val {
+			Some(val) => match val {
 				Variable::Var(val) => assert_eq!(*val, PI),
 				_ => assert!(false),
 			},
@@ -95,7 +91,7 @@ mod tests {
 		}
 
 		match env.get(String::from("sqrt")) {
-			Ok(var) => match var {
+			Some(var) => match var {
 				Variable::Fn(var) => assert_eq!(var(4.0), 2.0),
 				_ => assert!(false),
 			},
