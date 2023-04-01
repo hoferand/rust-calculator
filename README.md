@@ -143,7 +143,7 @@ Functions can not be defined by yourself but there are some predefined:
  3. Signs: `+`, `-`
  4. Function calls: `sqrt`, `sin`, etc
  5. Multiplicative Operators: `*`, `/`, `%`
- 6. Additions Operators: `+`,` -`
+ 6. Additions Operators: `+`, `-`
 
 So `5 + -4 * 5 + sqrt 100 + 12` is evaluated as `5 + ((-4) * 5) + (sqrt 100) + 12`.
 
