@@ -15,6 +15,8 @@ pub fn evaluate(tokens: &mut Vec<Token>, env: &mut Environment) -> Result<f32, E
 		if !matches!(token.token_type, TokenType::EOF) {
 			return unexpected_token(token);
 		}
+
+		return Ok(env.set_last_result(result.unwrap()));
 	}
 
 	return result;
@@ -84,24 +86,26 @@ fn evaluate_atomic(tokens: &mut Vec<Token>, env: &mut Environment) -> Result<f32
 	let token = tokens.remove(0);
 	match token.token_type {
 		TokenType::Number => Ok(token.value.parse().unwrap()),
-		TokenType::Identifier => {
-			let key = token;
-			match env.get(key.value.parse().unwrap()) {
-				Some(var) => match var {
-					Variable::Var(var) => Ok(*var),
-					Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
-				},
-				_ => Err(Error::VariableNotFound(key.value, key.start, key.end)),
-			}
-		}
-		TokenType::AddOperator => {
-			let operator = token;
-			match operator.value.as_str() {
-				"+" => evaluate_atomic(tokens, env),
-				"-" => Ok(-(evaluate_atomic(tokens, env)?)),
-				_ => invalid_operator(operator), // should never happen
-			}
-		}
+		TokenType::Identifier => match env.get(token.value.parse().unwrap()) {
+			Some(var) => match var {
+				Variable::Var(var) => Ok(*var),
+				Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
+			},
+			_ => Err(Error::VariableNotFound(token.value, token.start, token.end)),
+		},
+		TokenType::LastResult => match env.get_last_result() {
+			Some(var) => Ok(var),
+			_ => Err(Error::VariableNotFound(
+				String::from("$"),
+				token.start,
+				token.end,
+			)),
+		},
+		TokenType::AddOperator => match token.value.as_str() {
+			"+" => evaluate_atomic(tokens, env),
+			"-" => Ok(-(evaluate_atomic(tokens, env)?)),
+			_ => invalid_operator(token), // should never happen
+		},
 		TokenType::OpenBracket => {
 			let value = evaluate_additive(tokens, env);
 			let bracket = tokens.remove(0); // remove )
@@ -532,6 +536,50 @@ mod tests {
 			)
 			.unwrap(),
 			6.0
+		);
+	}
+
+	#[test]
+	fn test_13_last_result() {
+		let mut env = environment::new();
+		env.init();
+
+		// not assigned yet
+		match evaluate(
+			&mut vec![
+				new_t(TokenType::LastResult, String::from("$")),
+				new_t(TokenType::EOF, String::from("EOF")),
+			],
+			&mut environment::new(),
+		) {
+			Err(_) => assert!(true),
+			_ => assert!(false),
+		}
+
+		// assign last result
+		assert_eq!(
+			evaluate(
+				&mut vec![
+					new_t(TokenType::Number, String::from("4")),
+					new_t(TokenType::EOF, String::from("EOF")),
+				],
+				&mut env,
+			)
+			.unwrap(),
+			4.0
+		);
+
+		// use last result
+		assert_eq!(
+			evaluate(
+				&mut vec![
+					new_t(TokenType::LastResult, String::from("$")),
+					new_t(TokenType::EOF, String::from("EOF")),
+				],
+				&mut env,
+			)
+			.unwrap(),
+			4.0
 		);
 	}
 }

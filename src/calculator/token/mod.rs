@@ -7,6 +7,7 @@ pub enum TokenType {
 	CloseBracket,
 	Identifier,
 	Equals,
+	LastResult,
 	EOF,
 }
 

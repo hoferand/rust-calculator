@@ -9,6 +9,7 @@ pub enum Variable {
 
 pub struct Environment {
 	variables: HashMap<String, Variable>,
+	last_result: Option<f32>,
 }
 
 impl Environment {
@@ -19,6 +20,15 @@ impl Environment {
 
 	pub fn get(&mut self, key: String) -> Option<&Variable> {
 		return self.variables.get(&key);
+	}
+
+	pub fn get_last_result(&mut self) -> Option<f32> {
+		self.last_result
+	}
+
+	pub fn set_last_result(&mut self, value: f32) -> f32 {
+		self.last_result = Some(value);
+		value
 	}
 
 	pub fn init(&mut self) {
@@ -49,6 +59,7 @@ impl Environment {
 pub fn new() -> Environment {
 	return Environment {
 		variables: HashMap::new(),
+		last_result: None,
 	};
 }
 

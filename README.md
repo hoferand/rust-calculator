@@ -109,6 +109,20 @@ Error: Variable `xyz` not found!
 Predefined variables:
  - Pi: `pi`
  - Euler number: `e`
+ - Last result: `$`
+
+```
+> $
+Error: Variable `$` not found!
+ | $
+ | ^
+
+> 4 + 6 
+= 10
+
+> $ * 2
+= 20
+```
 
 
 ### Functions

@@ -47,6 +47,13 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, Error> {
 				start: start,
 				end: start,
 			});
+		} else if char == &'$' {
+			tokens.push(Token {
+				token_type: TokenType::LastResult,
+				value: String::from(chars.remove(0)),
+				start: start,
+				end: start,
+			});
 		} else if char.is_ascii_digit() {
 			let mut value = String::from(chars.remove(0));
 			let mut point_cnt = 0;
@@ -314,5 +321,38 @@ mod tests {
 			Err(_) => assert!(true),
 			_ => assert!(false),
 		}
+	}
+
+	#[test]
+	fn test_09_last_result() {
+		assert_eq!(
+			tokenize(&String::from("a$4")).unwrap(),
+			vec![
+				Token {
+					token_type: TokenType::Identifier,
+					value: String::from("a"),
+					start: 0,
+					end: 0
+				},
+				Token {
+					token_type: TokenType::LastResult,
+					value: String::from("$"),
+					start: 1,
+					end: 1
+				},
+				Token {
+					token_type: TokenType::Number,
+					value: String::from("4"),
+					start: 2,
+					end: 2
+				},
+				Token {
+					token_type: TokenType::EOF,
+					value: String::from("EOF"),
+					start: 3,
+					end: 3
+				}
+			]
+		);
 	}
 }

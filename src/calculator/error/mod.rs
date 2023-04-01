@@ -3,13 +3,13 @@ pub enum Error {
 	// error message
 	Error(String),
 
-	// invalid character, position
+	// character, position
 	InvalidCharacter(char, usize),
 
-	// invalid operator, start, end
+	// operator, start, end
 	InvalidOperator(String, usize, usize),
 
-	// unexpected, start, end
+	// token value, start, end
 	UnexpectedToken(String, usize, usize),
 
 	// variable name, start, end
