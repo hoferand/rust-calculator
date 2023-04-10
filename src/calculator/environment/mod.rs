@@ -13,6 +13,13 @@ pub struct Environment {
 }
 
 impl Environment {
+	pub fn new() -> Environment {
+		return Environment {
+			variables: HashMap::new(),
+			last_result: None,
+		};
+	}
+
 	pub fn assign(&mut self, key: String, value: f32) -> f32 {
 		self.variables.insert(key, Variable::Var(value));
 		value
@@ -56,20 +63,13 @@ impl Environment {
 	}
 }
 
-pub fn new() -> Environment {
-	return Environment {
-		variables: HashMap::new(),
-		last_result: None,
-	};
-}
-
 #[cfg(test)]
 mod tests {
 	use super::*;
 
 	#[test]
 	fn test_01_assignment() {
-		let mut env = new();
+		let mut env = Environment::new();
 		assert_eq!(env.assign(String::from("var1"), 34.5), 34.5);
 		match env.get(String::from("var1")) {
 			Some(val) => match val {
@@ -82,7 +82,7 @@ mod tests {
 
 	#[test]
 	fn test_02_get_undefined() {
-		let mut env = new();
+		let mut env = Environment::new();
 		match env.get(String::from("xyz")) {
 			None => assert!(true),
 			_ => assert!(false),
@@ -91,7 +91,7 @@ mod tests {
 
 	#[test]
 	fn test_03_init() {
-		let mut env = new();
+		let mut env = Environment::new();
 		env.init();
 		match env.get(String::from("pi")) {
 			Some(val) => match val {

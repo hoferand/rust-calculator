@@ -129,7 +129,6 @@ fn unexpected_token(token: Token) -> Result<f32, Error> {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::calculator::environment;
 
 	// only needed for testing
 	fn new_t(token_type: TokenType, value: String) -> Token {
@@ -149,7 +148,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("45.56")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			45.56
@@ -162,7 +161,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("45.56")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			-45.56
@@ -176,7 +175,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("45.56")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			-45.56
@@ -190,7 +189,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("45.56")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			45.56
@@ -207,7 +206,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			12.0
@@ -221,7 +220,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			3.0
@@ -235,7 +234,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("7")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			5.0
@@ -250,7 +249,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			-12.0
@@ -267,7 +266,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			7.0
@@ -281,7 +280,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			-1.0
@@ -296,7 +295,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			7.0
@@ -315,7 +314,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			19.0
@@ -331,7 +330,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			16.0
@@ -348,7 +347,7 @@ mod tests {
 					new_t(TokenType::Number, String::from("4")),
 					new_t(TokenType::EOF, String::from("EOF")),
 				],
-				&mut environment::new()
+				&mut Environment::new()
 			)
 			.unwrap(),
 			-8.0
@@ -359,7 +358,7 @@ mod tests {
 	fn test_05_blank_input() {
 		match evaluate(
 			&mut vec![new_t(TokenType::EOF, String::from("EOF"))],
-			&mut environment::new(),
+			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
 			_ => assert!(false),
@@ -373,7 +372,7 @@ mod tests {
 				new_t(TokenType::AddOperator, String::from("+")),
 				new_t(TokenType::EOF, String::from("EOF")),
 			],
-			&mut environment::new(),
+			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
 			_ => assert!(false),
@@ -388,7 +387,7 @@ mod tests {
 				new_t(TokenType::Number, String::from("5")),
 				new_t(TokenType::EOF, String::from("EOF")),
 			],
-			&mut environment::new(),
+			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
 			_ => assert!(false),
@@ -404,7 +403,7 @@ mod tests {
 				new_t(TokenType::OpenBracket, String::from("(")),
 				new_t(TokenType::EOF, String::from("EOF")),
 			],
-			&mut environment::new(),
+			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
 			_ => assert!(false),
@@ -420,7 +419,7 @@ mod tests {
 				new_t(TokenType::Number, String::from("0")),
 				new_t(TokenType::EOF, String::from("EOF")),
 			],
-			&mut environment::new(),
+			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
 			_ => assert!(false),
@@ -429,7 +428,7 @@ mod tests {
 
 	#[test]
 	fn test_10_variable_assigment_get() {
-		let mut env = environment::new();
+		let mut env = Environment::new();
 
 		// assign
 		assert_eq!(
@@ -499,7 +498,7 @@ mod tests {
 				new_t(TokenType::Identifier, String::from("xyz")),
 				new_t(TokenType::EOF, String::from("EOF")),
 			],
-			&mut environment::new(),
+			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
 			_ => assert!(false),
@@ -508,7 +507,7 @@ mod tests {
 
 	#[test]
 	fn test_12_function_call() {
-		let mut env = environment::new();
+		let mut env = Environment::new();
 		env.init();
 		assert_eq!(
 			evaluate(
@@ -541,7 +540,7 @@ mod tests {
 
 	#[test]
 	fn test_13_last_result() {
-		let mut env = environment::new();
+		let mut env = Environment::new();
 		env.init();
 
 		// not assigned yet
@@ -550,7 +549,7 @@ mod tests {
 				new_t(TokenType::LastResult, String::from("$")),
 				new_t(TokenType::EOF, String::from("EOF")),
 			],
-			&mut environment::new(),
+			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
 			_ => assert!(false),

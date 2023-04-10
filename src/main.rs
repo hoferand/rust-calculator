@@ -1,6 +1,6 @@
 use std::io::{self, stdout, BufRead, Write};
 mod calculator;
-use calculator::{environment, error::Error};
+use calculator::{environment::Environment, error::Error};
 use colored::Colorize;
 
 fn main() {
@@ -9,7 +9,7 @@ fn main() {
 	stdout().flush().expect("");
 
 	// initialize environment
-	let mut env = environment::new();
+	let mut env = Environment::new();
 	env.init();
 
 	// read expressions
