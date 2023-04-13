@@ -1,7 +1,7 @@
 use crate::calculator::error::Error;
 use crate::calculator::token::{Token, TokenType};
 
-pub fn tokenize(input: &String) -> Result<Vec<Token>, Error> {
+pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
 	let mut chars: Vec<char> = input.chars().collect();
 	let mut start = 0;
@@ -113,7 +113,7 @@ mod tests {
 	#[test]
 	fn test_01_blank_input() {
 		assert_eq!(
-			tokenize(&String::from("   \n\n   \t\t		")).unwrap(),
+			tokenize("   \n\n   \t\t		").unwrap(),
 			vec![Token {
 				token_type: TokenType::EOF,
 				value: String::from("EOF"),
@@ -126,7 +126,7 @@ mod tests {
 	#[test]
 	fn test_02_numerical_literal() {
 		assert_eq!(
-			tokenize(&String::from("9 44.4")).unwrap(),
+			tokenize("9 44.4").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::Number,
@@ -153,7 +153,7 @@ mod tests {
 	#[test]
 	fn test_03_add_operator_literal() {
 		assert_eq!(
-			tokenize(&String::from("+-")).unwrap(),
+			tokenize("+-").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::AddOperator,
@@ -180,7 +180,7 @@ mod tests {
 	#[test]
 	fn test_04_mul_operator_literal() {
 		assert_eq!(
-			tokenize(&String::from("*/%")).unwrap(),
+			tokenize("*/%").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::MulOperator,
@@ -213,7 +213,7 @@ mod tests {
 	#[test]
 	fn test_05_bracket_literal() {
 		assert_eq!(
-			tokenize(&String::from("()")).unwrap(),
+			tokenize("()").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::OpenBracket,
@@ -240,7 +240,7 @@ mod tests {
 	#[test]
 	fn test_06_equals_character() {
 		assert_eq!(
-			tokenize(&String::from("= 4")).unwrap(),
+			tokenize("= 4").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::Equals,
@@ -267,7 +267,7 @@ mod tests {
 	#[test]
 	fn test_07_identifier() {
 		assert_eq!(
-			tokenize(&String::from("Id id123")).unwrap(),
+			tokenize("Id id123").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::Identifier,
@@ -291,7 +291,7 @@ mod tests {
 		);
 
 		assert_eq!(
-			tokenize(&String::from("4id")).unwrap(),
+			tokenize("4id").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::Number,
@@ -317,7 +317,7 @@ mod tests {
 
 	#[test]
 	fn test_08_invalid_character() {
-		match tokenize(&String::from("<")) {
+		match tokenize("<") {
 			Err(_) => assert!(true),
 			_ => assert!(false),
 		}
@@ -326,7 +326,7 @@ mod tests {
 	#[test]
 	fn test_09_last_result() {
 		assert_eq!(
-			tokenize(&String::from("a$4")).unwrap(),
+			tokenize("a$4").unwrap(),
 			vec![
 				Token {
 					token_type: TokenType::Identifier,
