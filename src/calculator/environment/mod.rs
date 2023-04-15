@@ -14,10 +14,10 @@ pub struct Environment {
 
 impl Environment {
 	pub fn new() -> Environment {
-		return Environment {
+		Environment {
 			variables: HashMap::new(),
 			last_result: None,
-		};
+		}
 	}
 
 	pub fn assign(&mut self, key: String, value: f32) -> f32 {

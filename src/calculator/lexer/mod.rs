@@ -14,42 +14,42 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 			tokens.push(Token {
 				token_type: TokenType::OpenBracket,
 				value: char.to_string(),
-				start: start,
+				start,
 				end: start,
 			});
 		} else if char == ')' {
 			tokens.push(Token {
 				token_type: TokenType::CloseBracket,
 				value: char.to_string(),
-				start: start,
+				start,
 				end: start,
 			});
 		} else if ['+', '-'].contains(&char) {
 			tokens.push(Token {
 				token_type: TokenType::AddOperator,
 				value: char.to_string(),
-				start: start,
+				start,
 				end: start,
 			});
 		} else if ['*', '/', '%'].contains(&char) {
 			tokens.push(Token {
 				token_type: TokenType::MulOperator,
 				value: char.to_string(),
-				start: start,
+				start,
 				end: start,
 			});
 		} else if char == '=' {
 			tokens.push(Token {
 				token_type: TokenType::Equals,
 				value: char.to_string(),
-				start: start,
+				start,
 				end: start,
 			});
 		} else if char == '$' {
 			tokens.push(Token {
 				token_type: TokenType::LastResult,
 				value: char.to_string(),
-				start: start,
+				start,
 				end: start,
 			});
 		} else if char.is_ascii_digit() {
@@ -71,12 +71,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 			}
 			tokens.push(Token {
 				token_type: TokenType::Number,
-				value: value,
-				start: start,
-				end: end,
+				value,
+				start,
+				end,
 			});
 			start = end;
-		} else if char.is_ascii_alphanumeric() {
+		} else if char.is_ascii_alphabetic() {
 			let mut value = char.to_string();
 			let mut end = start;
 			while let Some(n_char) = chars.peek() {
@@ -89,12 +89,21 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 				}
 				break;
 			}
-			tokens.push(Token {
-				token_type: TokenType::Identifier,
-				value: value,
-				start: start,
-				end: end,
-			});
+			if value == "let" {
+				tokens.push(Token {
+					token_type: TokenType::Let,
+					value,
+					start,
+					end,
+				});
+			} else {
+				tokens.push(Token {
+					token_type: TokenType::Identifier,
+					value,
+					start,
+					end,
+				});
+			}
 			start = end;
 		} else {
 			return Err(Error::InvalidCharacter(char, start));
@@ -103,13 +112,13 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 		start += 1;
 	}
 	tokens.push(Token {
-		token_type: TokenType::EOF,
-		value: String::from("EOF"),
-		start: start,
+		token_type: TokenType::Eof,
+		value: String::from("Eof"),
+		start,
 		end: start,
 	});
 
-	return Ok(tokens);
+	Ok(tokens)
 }
 
 #[cfg(test)]
@@ -122,8 +131,8 @@ mod tests {
 		assert_eq!(
 			tokenize("   \n\n   \t\t		").unwrap(),
 			vec![Token {
-				token_type: TokenType::EOF,
-				value: String::from("EOF"),
+				token_type: TokenType::Eof,
+				value: String::from("Eof"),
 				start: 12,
 				end: 12
 			}]
@@ -148,8 +157,8 @@ mod tests {
 					end: 5
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 6,
 					end: 6
 				}
@@ -175,8 +184,8 @@ mod tests {
 					end: 1
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 2,
 					end: 2
 				}
@@ -208,8 +217,8 @@ mod tests {
 					end: 2
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 3,
 					end: 3
 				}
@@ -235,8 +244,8 @@ mod tests {
 					end: 1
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 2,
 					end: 2
 				}
@@ -262,8 +271,8 @@ mod tests {
 					end: 2
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 3,
 					end: 3
 				}
@@ -289,8 +298,8 @@ mod tests {
 					end: 7
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 8,
 					end: 8
 				}
@@ -313,8 +322,8 @@ mod tests {
 					end: 2
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 3,
 					end: 3
 				}
@@ -354,8 +363,8 @@ mod tests {
 					end: 2
 				},
 				Token {
-					token_type: TokenType::EOF,
-					value: String::from("EOF"),
+					token_type: TokenType::Eof,
+					value: String::from("Eof"),
 					start: 3,
 					end: 3
 				}

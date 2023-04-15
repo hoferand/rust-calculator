@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum Error {
 	// error message
-	Error(String),
+	Fatal(String),
 
 	// character, position
 	InvalidCharacter(char, usize),

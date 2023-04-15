@@ -6,9 +6,10 @@ pub enum TokenType {
 	OpenBracket,
 	CloseBracket,
 	Identifier,
+	Let,
 	Equals,
 	LastResult,
-	EOF,
+	Eof,
 }
 
 #[derive(Debug, PartialEq)]

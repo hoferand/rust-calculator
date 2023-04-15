@@ -7,8 +7,8 @@ mod parser;
 mod token;
 
 pub fn calculate(input: &str, env: &mut Environment) -> Result<f32, Error> {
-	let mut tokens = lexer::tokenize(input)?;
-	return parser::evaluate(&mut tokens, env);
+	let tokens = lexer::tokenize(input)?;
+	parser::evaluate(&mut tokens.into_iter().peekable(), env)
 }
 
 #[cfg(test)]
@@ -126,7 +126,7 @@ mod tests {
 	#[test]
 	fn test_07_variables() {
 		let mut env = Environment::new();
-		assert_eq!(calculate("a = 5", &mut env).unwrap(), 5.0);
+		assert_eq!(calculate("let a = 5", &mut env).unwrap(), 5.0);
 		assert_eq!(calculate("a * 10", &mut env).unwrap(), 50.0);
 	}
 

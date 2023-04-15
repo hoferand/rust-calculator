@@ -23,21 +23,21 @@ fn main() {
 			match calculator::calculate(&input, &mut env) {
 				Ok(result) => print!("= {}\n\n", result),
 				Err(e) => match e {
-					Error::Error(msg) => eprint!("Error: {}\n\n", msg),
+					Error::Fatal(msg) => eprintln!("Error: {}", msg),
 					Error::InvalidCharacter(ch, pos) => {
-						eprint!("Error: Invalid character `{}` found!\n", ch);
+						eprintln!("Error: Invalid character `{}` found!", ch);
 						print_error_position(&input, &pos, &pos);
 					}
 					Error::InvalidOperator(op, start, end) => {
-						eprint!("Error: Invalid operator `{}` found !\n", op);
+						eprintln!("Error: Invalid operator `{}` found !", op);
 						print_error_position(&input, &start, &end);
 					}
 					Error::UnexpectedToken(token, start, end) => {
-						eprint!("Error: Unexpected token `{}` found!\n", token);
+						eprintln!("Error: Unexpected token `{}` found!", token);
 						print_error_position(&input, &start, &end);
 					}
 					Error::VariableNotFound(var, start, end) => {
-						eprint!("Error: Variable `{}` not found!\n", var);
+						eprintln!("Error: Variable `{}` not found!", var);
 						print_error_position(&input, &start, &end);
 					}
 				},
