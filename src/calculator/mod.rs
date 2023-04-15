@@ -8,7 +8,7 @@ mod token;
 
 pub fn calculate(input: &str, env: &mut Environment) -> Result<f32, Error> {
 	let tokens = lexer::tokenize(input)?;
-	parser::evaluate(&mut tokens.into_iter().peekable(), env)
+	parser::evaluate(&mut tokens.peekable(), env)
 }
 
 #[cfg(test)]
