@@ -23,7 +23,7 @@ fn main() {
 			match calculator::calculate(&input, &mut env) {
 				Ok(result) => print!("= {}\n\n", result),
 				Err(e) => match e {
-					Error::Fatal(msg) => eprintln!("Error: {}", msg),
+					Error::Fatal(msg) => eprint!("Error: {}\n\n", msg),
 					Error::InvalidCharacter(ch, pos) => {
 						eprintln!("Error: Invalid character `{}` found!", ch);
 						print_error_position(&input, &pos, &pos);
