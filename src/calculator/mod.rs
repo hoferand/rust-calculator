@@ -17,23 +17,11 @@ mod tests {
 
 	#[test]
 	fn test_01_numerical_literal() {
-		assert_eq!(
-			calculate("0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("4", &mut Environment::new()).unwrap(),
-			4.0
-		);
+		assert_eq!(calculate("0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("4", &mut Environment::new()).unwrap(), 4.0);
 
-		assert_eq!(
-			calculate("0.0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("4.5", &mut Environment::new()).unwrap(),
-			4.5
-		);
+		assert_eq!(calculate("0.0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("4.5", &mut Environment::new()).unwrap(), 4.5);
 		assert_eq!(
 			calculate("455.555", &mut Environment::new()).unwrap(),
 			455.555
@@ -42,119 +30,47 @@ mod tests {
 
 	#[test]
 	fn test_02_sign() {
-		assert_eq!(
-			calculate("-0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("-4", &mut Environment::new()).unwrap(),
-			-4.0
-		);
-		assert_eq!(
-			calculate("-0.0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("-4.5", &mut Environment::new()).unwrap(),
-			-4.5
-		);
+		assert_eq!(calculate("-0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("-4", &mut Environment::new()).unwrap(), -4.0);
+		assert_eq!(calculate("-0.0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("-4.5", &mut Environment::new()).unwrap(), -4.5);
 		assert_eq!(
 			calculate("-455.555", &mut Environment::new()).unwrap(),
 			-455.555
 		);
 
-		assert_eq!(
-			calculate("+0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("+4", &mut Environment::new()).unwrap(),
-			4.0
-		);
-		assert_eq!(
-			calculate("+4.5", &mut Environment::new()).unwrap(),
-			4.5
-		);
+		assert_eq!(calculate("+0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("+4", &mut Environment::new()).unwrap(), 4.0);
+		assert_eq!(calculate("+4.5", &mut Environment::new()).unwrap(), 4.5);
 
-		assert_eq!(
-			calculate("--4", &mut Environment::new()).unwrap(),
-			4.0
-		);
-		assert_eq!(
-			calculate("+-4", &mut Environment::new()).unwrap(),
-			-4.0
-		);
+		assert_eq!(calculate("--4", &mut Environment::new()).unwrap(), 4.0);
+		assert_eq!(calculate("+-4", &mut Environment::new()).unwrap(), -4.0);
 	}
 
 	#[test]
 	fn test_03_additive() {
-		assert_eq!(
-			calculate("0 + 0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("4 + 3", &mut Environment::new()).unwrap(),
-			7.0
-		);
-		assert_eq!(
-			calculate("4.5 + 3", &mut Environment::new()).unwrap(),
-			7.5
-		);
+		assert_eq!(calculate("0 + 0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("4 + 3", &mut Environment::new()).unwrap(), 7.0);
+		assert_eq!(calculate("4.5 + 3", &mut Environment::new()).unwrap(), 7.5);
 
-		assert_eq!(
-			calculate("0 - 0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("4 - 7", &mut Environment::new()).unwrap(),
-			-3.0
-		);
-		assert_eq!(
-			calculate("4.5 - 3", &mut Environment::new()).unwrap(),
-			1.5
-		);
+		assert_eq!(calculate("0 - 0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("4 - 7", &mut Environment::new()).unwrap(), -3.0);
+		assert_eq!(calculate("4.5 - 3", &mut Environment::new()).unwrap(), 1.5);
 	}
 
 	#[test]
 	fn test_04_multiplicative() {
-		assert_eq!(
-			calculate("0 * 0", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("4 * 3", &mut Environment::new()).unwrap(),
-			12.0
-		);
-		assert_eq!(
-			calculate("4.5 * 3", &mut Environment::new()).unwrap(),
-			13.5
-		);
+		assert_eq!(calculate("0 * 0", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("4 * 3", &mut Environment::new()).unwrap(), 12.0);
+		assert_eq!(calculate("4.5 * 3", &mut Environment::new()).unwrap(), 13.5);
 
-		assert_eq!(
-			calculate("0 / 1", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("12 / 3", &mut Environment::new()).unwrap(),
-			4.0
-		);
-		assert_eq!(
-			calculate("4.5 / 3", &mut Environment::new()).unwrap(),
-			1.5
-		);
+		assert_eq!(calculate("0 / 1", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("12 / 3", &mut Environment::new()).unwrap(), 4.0);
+		assert_eq!(calculate("4.5 / 3", &mut Environment::new()).unwrap(), 1.5);
 
-		assert_eq!(
-			calculate("0 % 1", &mut Environment::new()).unwrap(),
-			0.0
-		);
-		assert_eq!(
-			calculate("11 % 3", &mut Environment::new()).unwrap(),
-			2.0
-		);
-		assert_eq!(
-			calculate("4.5 % 3", &mut Environment::new()).unwrap(),
-			1.5
-		);
+		assert_eq!(calculate("0 % 1", &mut Environment::new()).unwrap(), 0.0);
+		assert_eq!(calculate("11 % 3", &mut Environment::new()).unwrap(), 2.0);
+		assert_eq!(calculate("4.5 % 3", &mut Environment::new()).unwrap(), 1.5);
 	}
 
 	#[test]
@@ -219,10 +135,7 @@ mod tests {
 		let mut env = Environment::new();
 		env.init();
 		assert_eq!(calculate("sqrt 16", &mut env).unwrap(), 4.0);
-		assert_eq!(
-			calculate("sqrt 16 * 5", &mut env).unwrap(),
-			20.0
-		);
+		assert_eq!(calculate("sqrt 16 * 5", &mut env).unwrap(), 20.0);
 	}
 
 	#[test]

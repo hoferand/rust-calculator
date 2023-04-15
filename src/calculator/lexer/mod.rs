@@ -3,70 +3,71 @@ use crate::calculator::token::{Token, TokenType};
 
 pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
-	let mut chars: Vec<char> = input.chars().collect();
+	let mut chars = input.chars().peekable();
 	let mut start = 0;
-	while !chars.is_empty() {
-		let char = chars.first().unwrap();
+	while let Some(char) = chars.next() {
 		if [' ', '\n', '\t'].contains(&char) {
-			// ignore spaces, new lines and tabs
-			chars.remove(0);
+			// ignore spaces, line breaks and tabs
 			start += 1;
 			continue;
-		} else if char == &'(' {
+		} else if char == '(' {
 			tokens.push(Token {
 				token_type: TokenType::OpenBracket,
-				value: String::from(chars.remove(0)),
+				value: char.to_string(),
 				start: start,
 				end: start,
 			});
-		} else if char == &')' {
+		} else if char == ')' {
 			tokens.push(Token {
 				token_type: TokenType::CloseBracket,
-				value: String::from(chars.remove(0)),
+				value: char.to_string(),
 				start: start,
 				end: start,
 			});
 		} else if ['+', '-'].contains(&char) {
 			tokens.push(Token {
 				token_type: TokenType::AddOperator,
-				value: String::from(chars.remove(0)),
+				value: char.to_string(),
 				start: start,
 				end: start,
 			});
 		} else if ['*', '/', '%'].contains(&char) {
 			tokens.push(Token {
 				token_type: TokenType::MulOperator,
-				value: String::from(chars.remove(0)),
+				value: char.to_string(),
 				start: start,
 				end: start,
 			});
-		} else if char == &'=' {
+		} else if char == '=' {
 			tokens.push(Token {
 				token_type: TokenType::Equals,
-				value: String::from(chars.remove(0)),
+				value: char.to_string(),
 				start: start,
 				end: start,
 			});
-		} else if char == &'$' {
+		} else if char == '$' {
 			tokens.push(Token {
 				token_type: TokenType::LastResult,
-				value: String::from(chars.remove(0)),
+				value: char.to_string(),
 				start: start,
 				end: start,
 			});
 		} else if char.is_ascii_digit() {
-			let mut value = String::from(chars.remove(0));
+			let mut value = char.to_string();
 			let mut point_cnt = 0;
 			let mut end = start;
-			while !chars.is_empty()
-				&& (chars.first().unwrap().is_numeric()
-					|| (chars.first().unwrap() == &'.' && point_cnt == 0))
-			{
-				if chars.first().unwrap() == &'.' {
-					point_cnt += 1;
+			while let Some(n_char) = chars.peek() {
+				if n_char.is_numeric() || (*n_char == '.' && point_cnt == 0) {
+					if let Some(char) = chars.next() {
+						if char == '.' {
+							point_cnt += 1;
+						}
+						value.push(char);
+						end += 1;
+						continue;
+					}
 				}
-				value.push(chars.remove(0));
-				end += 1;
+				break;
 			}
 			tokens.push(Token {
 				token_type: TokenType::Number,
@@ -76,11 +77,17 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 			});
 			start = end;
 		} else if char.is_ascii_alphanumeric() {
-			let mut value = String::from(chars.remove(0));
+			let mut value = char.to_string();
 			let mut end = start;
-			while !chars.is_empty() && chars.first().unwrap().is_ascii_alphanumeric() {
-				value.push(chars.remove(0));
-				end += 1;
+			while let Some(n_char) = chars.peek() {
+				if n_char.is_ascii_alphanumeric() {
+					if let Some(char) = chars.next() {
+						value.push(char);
+						end += 1;
+						continue;
+					}
+				}
+				break;
 			}
 			tokens.push(Token {
 				token_type: TokenType::Identifier,
@@ -90,7 +97,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 			});
 			start = end;
 		} else {
-			return Err(Error::InvalidCharacter(*char, start));
+			return Err(Error::InvalidCharacter(char, start));
 		}
 
 		start += 1;
