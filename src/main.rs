@@ -21,37 +21,36 @@ fn main() {
 
 			// evaluate line
 			match calculator::calculate(&input, &mut env) {
-				Ok(result) => print!("= {}\n\n", result),
-				Err(e) => match e {
-					Error::Fatal(msg) => eprint!("Error: {}\n\n", msg),
-					Error::InvalidCharacter(ch, pos) => {
-						eprintln!("Error: Invalid character `{}` found!", ch);
-						print_error_position(&input, &pos, &pos);
+				Ok(result) => println!("= {}", result),
+				Err(e) => {
+					eprintln!("Error: {}", e);
+					match e {
+						Error::Fatal(_) => (),
+						Error::InvalidCharacter(_, pos) => {
+							print_error_position(&input, &pos, &pos);
+						}
+						Error::InvalidOperator(_, start, end) => {
+							print_error_position(&input, &start, &end);
+						}
+						Error::UnexpectedToken(_, start, end) => {
+							print_error_position(&input, &start, &end);
+						}
+						Error::VariableNotFound(_, start, end) => {
+							print_error_position(&input, &start, &end);
+						}
 					}
-					Error::InvalidOperator(op, start, end) => {
-						eprintln!("Error: Invalid operator `{}` found!", op);
-						print_error_position(&input, &start, &end);
-					}
-					Error::UnexpectedToken(token, start, end) => {
-						eprintln!("Error: Unexpected token `{}` found!", token);
-						print_error_position(&input, &start, &end);
-					}
-					Error::VariableNotFound(var, start, end) => {
-						eprintln!("Error: Variable `{}` not found!", var);
-						print_error_position(&input, &start, &end);
-					}
-				},
+				}
 			}
 		}
 
-		print!("> ");
+		print!("\n> ");
 		stdout().flush().expect("");
 	}
 }
 
 fn print_error_position(input: &String, start: &usize, end: &usize) {
-	eprint!(
-		" {} {}\n {} {}{}\n\n",
+	eprintln!(
+		" {} {}\n {} {}{}",
 		"|".red().bold(),
 		&input,
 		"|".red().bold(),
