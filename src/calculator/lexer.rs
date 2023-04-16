@@ -89,21 +89,16 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 				}
 				break;
 			}
-			if value == "let" {
-				tokens.push(Token {
-					token_type: TokenType::Let,
-					value,
-					start,
-					end,
-				});
-			} else {
-				tokens.push(Token {
-					token_type: TokenType::Identifier,
-					value,
-					start,
-					end,
-				});
-			}
+			tokens.push(Token {
+				token_type: if value == "let" {
+					TokenType::Let
+				} else {
+					TokenType::Identifier
+				},
+				value,
+				start,
+				end,
+			});
 			start = end;
 		} else {
 			return Err(Error::InvalidCharacter(char, start));
