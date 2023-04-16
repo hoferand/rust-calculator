@@ -108,8 +108,11 @@ fn evaluate_atomic(
 ) -> Result<f32, Error> {
 	if let Some(token) = tokens.next() {
 		match token.token_type {
-			TokenType::Number => Ok(token.value.parse().unwrap()),
-			TokenType::Identifier => match env.get(token.value.parse().unwrap()) {
+			TokenType::Number => match token.value.parse() {
+				Ok(val) => Ok(val),
+				Err(msg) => Err(Error::Fatal(msg.to_string())),
+			},
+			TokenType::Identifier => match env.get(token.value.to_owned()) {
 				Some(var) => match var {
 					Variable::Var(var) => Ok(*var),
 					Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
