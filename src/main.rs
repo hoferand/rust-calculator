@@ -29,7 +29,7 @@ fn main() {
 						print_error_position(&input, &pos, &pos);
 					}
 					Error::InvalidOperator(op, start, end) => {
-						eprintln!("Error: Invalid operator `{}` found !", op);
+						eprintln!("Error: Invalid operator `{}` found!", op);
 						print_error_position(&input, &start, &end);
 					}
 					Error::UnexpectedToken(token, start, end) => {
