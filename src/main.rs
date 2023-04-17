@@ -29,9 +29,6 @@ fn main() {
 						Error::InvalidCharacter(_, pos) => {
 							print_error_position(&input, &pos, &pos);
 						}
-						Error::InvalidOperator(_, start, end) => {
-							print_error_position(&input, &start, &end);
-						}
 						Error::UnexpectedToken(_, start, end) => {
 							print_error_position(&input, &start, &end);
 						}

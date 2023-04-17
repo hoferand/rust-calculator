@@ -2,7 +2,7 @@ use std::iter::Peekable;
 
 use crate::calculator::environment::{Environment, Variable};
 use crate::calculator::error::Error;
-use crate::calculator::token::{Token, TokenType};
+use crate::calculator::token::{AddOperator, MulOperator, Token, TokenValue};
 
 pub fn evaluate(
 	tokens: &mut Peekable<impl Iterator<Item = Token>>,
@@ -12,7 +12,7 @@ pub fn evaluate(
 
 	// check if all tokens are consumed
 	if let Ok(value) = result {
-		consume(tokens, TokenType::Eof)?;
+		consume(tokens, TokenValue::Eof)?;
 		env.set_last_result(value);
 
 		return Ok(value);
@@ -27,8 +27,8 @@ fn evaluate_statement(
 ) -> Result<f32, Error> {
 	let result;
 	if let Some(token) = tokens.peek() {
-		match token.token_type {
-			TokenType::Let => result = evaluate_assignment(tokens, env),
+		match token.value {
+			TokenValue::Let => result = evaluate_assignment(tokens, env),
 			_ => result = evaluate_additive(tokens, env),
 		}
 	} else {
@@ -42,12 +42,19 @@ fn evaluate_assignment(
 	tokens: &mut Peekable<impl Iterator<Item = Token>>,
 	env: &mut Environment,
 ) -> Result<f32, Error> {
-	consume(tokens, TokenType::Let)?;
-	let id = consume(tokens, TokenType::Identifier)?;
-	consume(tokens, TokenType::Equals)?;
-	let value = evaluate_statement(tokens, env)?;
+	consume(tokens, TokenValue::Let)?;
+	if let Some(token) = tokens.next() {
+		match token.value {
+			TokenValue::Identifier(id) => {
+				consume(tokens, TokenValue::Equals)?;
+				let value = evaluate_statement(tokens, env)?;
+				return Ok(env.assign(id, value));
+			}
+			_ => return unexpected_token(token),
+		}
+	}
 
-	Ok(env.assign(id.value, value))
+	unexpected_end_of_input()
 }
 
 fn evaluate_additive(
@@ -56,14 +63,18 @@ fn evaluate_additive(
 ) -> Result<f32, Error> {
 	let mut left = evaluate_multiplicative(tokens, env)?;
 
-	while let Some(token) = tokens.peek() {
-		if token.token_type == TokenType::AddOperator {
-			let operator = consume(tokens, TokenType::AddOperator)?;
+	while let Some(Token {
+		value: TokenValue::AddOperator(_),
+		start: _,
+		end: _,
+	}) = tokens.peek()
+	{
+		if let Some(op) = tokens.next() {
 			let right = evaluate_multiplicative(tokens, env)?;
-			match operator.value.as_str() {
-				"+" => left += right,
-				"-" => left -= right,
-				_ => return invalid_operator(operator), // should never happen
+			match op.value {
+				TokenValue::AddOperator(AddOperator::Add) => left += right,
+				TokenValue::AddOperator(AddOperator::Sub) => left -= right,
+				_ => return unexpected_token(op),
 			}
 		} else {
 			break;
@@ -79,20 +90,29 @@ fn evaluate_multiplicative(
 ) -> Result<f32, Error> {
 	let mut left = evaluate_atomic(tokens, env)?;
 
-	while let Some(token) = tokens.peek() {
-		if token.token_type == TokenType::MulOperator {
-			let operator = consume(tokens, TokenType::MulOperator)?;
-			let right = evaluate_atomic(tokens, env)?;
-			match operator.value.as_str() {
-				"*" => left *= right,
-				"/" => {
+	while let Some(Token {
+		value: TokenValue::MulOperator(_),
+		start: _,
+		end: _,
+	}) = tokens.peek()
+	{
+		if let Some(op) = tokens.next() {
+			let right = evaluate_multiplicative(tokens, env)?;
+			match op.value {
+				TokenValue::MulOperator(MulOperator::Mul) => left *= right,
+				TokenValue::MulOperator(MulOperator::Div) => {
 					if right == 0.0 {
 						return Err(Error::Fatal(String::from("Division by 0!")));
 					}
 					left /= right
 				}
-				"%" => left %= right,
-				_ => return invalid_operator(operator), // should never happen
+				TokenValue::MulOperator(MulOperator::Mod) => {
+					if right == 0.0 {
+						return Err(Error::Fatal(String::from("Division by 0!")));
+					}
+					left %= right
+				}
+				_ => return unexpected_token(op),
 			}
 		} else {
 			break;
@@ -107,37 +127,33 @@ fn evaluate_atomic(
 	env: &mut Environment,
 ) -> Result<f32, Error> {
 	if let Some(token) = tokens.next() {
-		match token.token_type {
-			TokenType::Number => match token.value.parse() {
-				Ok(val) => Ok(val),
-				Err(msg) => Err(Error::Fatal(msg.to_string())),
-			},
-			TokenType::Identifier => match env.get(token.value.to_owned()) {
+		match token.value {
+			TokenValue::Number(val) => Ok(val),
+			TokenValue::Identifier(id) => match env.get(id.to_owned()) {
 				Some(var) => match var {
 					Variable::Var(var) => Ok(*var),
 					Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
 				},
-				_ => Err(Error::VariableNotFound(token.value, token.start, token.end)),
+				_ => Err(Error::VariableNotFound(id, token.start, token.end)),
 			},
-			TokenType::LastResult => match env.get_last_result() {
+			TokenValue::LastResult => match env.get_last_result() {
 				Some(var) => Ok(var),
 				_ => Err(Error::VariableNotFound(
-					String::from("$"),
+					token.value.to_string(),
 					token.start,
 					token.end,
 				)),
 			},
-			TokenType::AddOperator => match token.value.as_str() {
-				"+" => evaluate_atomic(tokens, env),
-				"-" => Ok(-(evaluate_atomic(tokens, env)?)),
-				_ => invalid_operator(token), // should never happen
+			TokenValue::AddOperator(op) => match op {
+				AddOperator::Add => evaluate_atomic(tokens, env),
+				AddOperator::Sub => Ok(-(evaluate_atomic(tokens, env)?)),
 			},
-			TokenType::OpenBracket => {
+			TokenValue::OpenBracket => {
 				let value = evaluate_additive(tokens, env);
-				consume(tokens, TokenType::CloseBracket)?;
+				consume(tokens, TokenValue::CloseBracket)?;
 				value
 			}
-			TokenType::Eof => unexpected_end_of_input(),
+			TokenValue::Eof => unexpected_end_of_input(),
 			_ => unexpected_token(token),
 		}
 	} else {
@@ -147,25 +163,29 @@ fn evaluate_atomic(
 
 fn consume(
 	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	token_type: TokenType,
+	token_type: TokenValue,
 ) -> Result<Token, Error> {
 	if let Some(token) = tokens.next() {
-		if token.token_type == token_type {
+		if token.value == token_type {
 			Ok(token)
 		} else {
-			Err(Error::UnexpectedToken(token.value, token.start, token.end))
+			Err(Error::UnexpectedToken(
+				token.value.to_string(),
+				token.start,
+				token.end,
+			))
 		}
 	} else {
 		Err(Error::Fatal(String::from("Unexpected end of input!")))
 	}
 }
 
-fn invalid_operator(token: Token) -> Result<f32, Error> {
-	Err(Error::InvalidOperator(token.value, token.start, token.end))
-}
-
 fn unexpected_token(token: Token) -> Result<f32, Error> {
-	Err(Error::UnexpectedToken(token.value, token.start, token.end))
+	Err(Error::UnexpectedToken(
+		token.value.to_string(),
+		token.start,
+		token.end,
+	))
 }
 
 fn unexpected_end_of_input() -> Result<f32, Error> {
@@ -177,9 +197,8 @@ mod tests {
 	use super::*;
 
 	// only needed for testing
-	fn new_t(token_type: TokenType, value: String) -> Token {
+	fn new_t(value: TokenValue) -> Token {
 		Token {
-			token_type,
 			value,
 			start: 0,
 			end: 0,
@@ -190,12 +209,9 @@ mod tests {
 	fn test_01_evaluate_atomic_simple() {
 		assert_eq!(
 			evaluate_atomic(
-				&mut vec![
-					new_t(TokenType::Number, String::from("45.56")),
-					new_t(TokenType::Eof, String::from("Eof")),
-				]
-				.into_iter()
-				.peekable(),
+				&mut vec![new_t(TokenValue::Number(45.56)), new_t(TokenValue::Eof),]
+					.into_iter()
+					.peekable(),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -205,9 +221,9 @@ mod tests {
 		assert_eq!(
 			evaluate_atomic(
 				&mut vec![
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::Number, String::from("45.56")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(45.56)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -220,10 +236,10 @@ mod tests {
 		assert_eq!(
 			evaluate_atomic(
 				&mut vec![
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::Number, String::from("45.56")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(45.56)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -236,10 +252,10 @@ mod tests {
 		assert_eq!(
 			evaluate_atomic(
 				&mut vec![
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::Number, String::from("45.56")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(45.56)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -255,10 +271,10 @@ mod tests {
 		assert_eq!(
 			evaluate_multiplicative(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::MulOperator, String::from("*")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Mul)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -271,10 +287,10 @@ mod tests {
 		assert_eq!(
 			evaluate_multiplicative(
 				&mut vec![
-					new_t(TokenType::Number, String::from("12")),
-					new_t(TokenType::MulOperator, String::from("/")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(12.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Div)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -287,10 +303,10 @@ mod tests {
 		assert_eq!(
 			evaluate_multiplicative(
 				&mut vec![
-					new_t(TokenType::Number, String::from("12")),
-					new_t(TokenType::MulOperator, String::from("%")),
-					new_t(TokenType::Number, String::from("7")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(12.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Mod)),
+					new_t(TokenValue::Number(7.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -303,11 +319,11 @@ mod tests {
 		assert_eq!(
 			evaluate_multiplicative(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::MulOperator, String::from("*")),
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Mul)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -323,10 +339,10 @@ mod tests {
 		assert_eq!(
 			evaluate_additive(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -339,10 +355,10 @@ mod tests {
 		assert_eq!(
 			evaluate_additive(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -355,11 +371,11 @@ mod tests {
 		assert_eq!(
 			evaluate_additive(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -375,12 +391,12 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::MulOperator, String::from("*")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Mul)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -393,12 +409,12 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::MulOperator, String::from("*")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Mul)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -411,13 +427,13 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Number, String::from("3")),
-					new_t(TokenType::MulOperator, String::from("*")),
-					new_t(TokenType::AddOperator, String::from("-")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Mul)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -431,9 +447,7 @@ mod tests {
 	#[test]
 	fn test_05_blank_input() {
 		match evaluate(
-			&mut vec![new_t(TokenType::Eof, String::from("Eof"))]
-				.into_iter()
-				.peekable(),
+			&mut vec![new_t(TokenValue::Eof)].into_iter().peekable(),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -445,8 +459,8 @@ mod tests {
 	fn test_06_only_operator() {
 		match evaluate(
 			&mut vec![
-				new_t(TokenType::AddOperator, String::from("+")),
-				new_t(TokenType::Eof, String::from("Eof")),
+				new_t(TokenValue::AddOperator(AddOperator::Add)),
+				new_t(TokenValue::Eof),
 			]
 			.into_iter()
 			.peekable(),
@@ -461,9 +475,9 @@ mod tests {
 	fn test_07_only_numbers() {
 		match evaluate(
 			&mut vec![
-				new_t(TokenType::Number, String::from("4")),
-				new_t(TokenType::Number, String::from("5")),
-				new_t(TokenType::Eof, String::from("Eof")),
+				new_t(TokenValue::Number(4.0)),
+				new_t(TokenValue::Number(5.0)),
+				new_t(TokenValue::Eof),
 			]
 			.into_iter()
 			.peekable(),
@@ -478,10 +492,10 @@ mod tests {
 	fn test_08_wrong_bracket() {
 		match evaluate(
 			&mut vec![
-				new_t(TokenType::OpenBracket, String::from("(")),
-				new_t(TokenType::Number, String::from("5")),
-				new_t(TokenType::OpenBracket, String::from("(")),
-				new_t(TokenType::Eof, String::from("Eof")),
+				new_t(TokenValue::OpenBracket),
+				new_t(TokenValue::Number(5.0)),
+				new_t(TokenValue::OpenBracket),
+				new_t(TokenValue::Eof),
 			]
 			.into_iter()
 			.peekable(),
@@ -496,10 +510,10 @@ mod tests {
 	fn test_09_division_by_0() {
 		match evaluate(
 			&mut vec![
-				new_t(TokenType::Number, String::from("4")),
-				new_t(TokenType::MulOperator, String::from("/")),
-				new_t(TokenType::Number, String::from("0")),
-				new_t(TokenType::Eof, String::from("Eof")),
+				new_t(TokenValue::Number(4.0)),
+				new_t(TokenValue::MulOperator(MulOperator::Div)),
+				new_t(TokenValue::Number(0.0)),
+				new_t(TokenValue::Eof),
 			]
 			.into_iter()
 			.peekable(),
@@ -518,11 +532,11 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Let, String::from("let")),
-					new_t(TokenType::Identifier, String::from("a")),
-					new_t(TokenType::Equals, String::from("=")),
-					new_t(TokenType::Number, String::from("34.5")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Let),
+					new_t(TokenValue::Identifier("a".to_owned())),
+					new_t(TokenValue::Equals),
+					new_t(TokenValue::Number(34.5)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -536,10 +550,10 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Identifier, String::from("a")),
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::Number, String::from("2")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Identifier("a".to_owned())),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::Number(2.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -553,11 +567,11 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Let, String::from("let")),
-					new_t(TokenType::Identifier, String::from("a")),
-					new_t(TokenType::Equals, String::from("=")),
-					new_t(TokenType::Number, String::from("5.4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Let),
+					new_t(TokenValue::Identifier("a".to_owned())),
+					new_t(TokenValue::Equals),
+					new_t(TokenValue::Number(5.4)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -571,10 +585,10 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Identifier, String::from("a")),
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::Number, String::from("2")),
-					new_t(TokenType::Eof, String::from("Eof"))
+					new_t(TokenValue::Identifier("a".to_owned())),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::Number(2.0)),
+					new_t(TokenValue::Eof)
 				]
 				.into_iter()
 				.peekable(),
@@ -589,8 +603,8 @@ mod tests {
 	fn test_11_get_undefined_variable() {
 		match evaluate(
 			&mut vec![
-				new_t(TokenType::Identifier, String::from("xyz")),
-				new_t(TokenType::Eof, String::from("Eof")),
+				new_t(TokenValue::Identifier("xyz".to_owned())),
+				new_t(TokenValue::Eof),
 			]
 			.into_iter()
 			.peekable(),
@@ -608,9 +622,9 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Identifier, String::from("sqrt")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof"))
+					new_t(TokenValue::Identifier("sqrt".to_owned())),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof)
 				]
 				.into_iter()
 				.peekable(),
@@ -623,11 +637,11 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut vec![
-					new_t(TokenType::Identifier, String::from("sqrt")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::AddOperator, String::from("+")),
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
+					new_t(TokenValue::Identifier("sqrt".to_owned())),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::AddOperator(AddOperator::Add)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::Eof),
 				]
 				.into_iter()
 				.peekable(),
@@ -645,12 +659,9 @@ mod tests {
 
 		// not assigned yet
 		match evaluate(
-			&mut vec![
-				new_t(TokenType::LastResult, String::from("$")),
-				new_t(TokenType::Eof, String::from("Eof")),
-			]
-			.into_iter()
-			.peekable(),
+			&mut vec![new_t(TokenValue::LastResult), new_t(TokenValue::Eof)]
+				.into_iter()
+				.peekable(),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -660,12 +671,9 @@ mod tests {
 		// assign last result
 		assert_eq!(
 			evaluate(
-				&mut vec![
-					new_t(TokenType::Number, String::from("4")),
-					new_t(TokenType::Eof, String::from("Eof")),
-				]
-				.into_iter()
-				.peekable(),
+				&mut vec![new_t(TokenValue::Number(4.0)), new_t(TokenValue::Eof),]
+					.into_iter()
+					.peekable(),
 				&mut env,
 			)
 			.unwrap(),
@@ -675,12 +683,9 @@ mod tests {
 		// use last result
 		assert_eq!(
 			evaluate(
-				&mut vec![
-					new_t(TokenType::LastResult, String::from("$")),
-					new_t(TokenType::Eof, String::from("Eof")),
-				]
-				.into_iter()
-				.peekable(),
+				&mut vec![new_t(TokenValue::LastResult), new_t(TokenValue::Eof),]
+					.into_iter()
+					.peekable(),
 				&mut env,
 			)
 			.unwrap(),

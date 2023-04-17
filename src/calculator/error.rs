@@ -6,9 +6,6 @@ pub enum Error {
 	// character, position
 	InvalidCharacter(char, usize),
 
-	// operator, start, end
-	InvalidOperator(String, usize, usize),
-
 	// token value, start, end
 	UnexpectedToken(String, usize, usize),
 
@@ -21,7 +18,6 @@ impl std::fmt::Display for Error {
 		match self {
 			Self::Fatal(msg) => write!(f, "{}", msg),
 			Self::InvalidCharacter(ch, _) => write!(f, "Invalid character `{}` found!", ch),
-			Self::InvalidOperator(op, _, _) => write!(f, "Invalid operator `{}` found!", op),
 			Self::UnexpectedToken(tk, _, _) => {
 				write!(f, "Unexpected token `{}` found!", tk)
 			}

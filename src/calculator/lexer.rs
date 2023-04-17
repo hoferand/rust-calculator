@@ -1,5 +1,5 @@
 use crate::calculator::error::Error;
-use crate::calculator::token::{Token, TokenType};
+use crate::calculator::token::{AddOperator, MulOperator, Token, TokenValue};
 
 pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
@@ -12,43 +12,55 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 			continue;
 		} else if char == '(' {
 			tokens.push(Token {
-				token_type: TokenType::OpenBracket,
-				value: char.to_string(),
+				value: TokenValue::OpenBracket,
 				start,
 				end: start,
 			});
 		} else if char == ')' {
 			tokens.push(Token {
-				token_type: TokenType::CloseBracket,
-				value: char.to_string(),
+				value: TokenValue::CloseBracket,
 				start,
 				end: start,
 			});
-		} else if ['+', '-'].contains(&char) {
+		} else if char == '+' {
 			tokens.push(Token {
-				token_type: TokenType::AddOperator,
-				value: char.to_string(),
+				value: TokenValue::AddOperator(AddOperator::Add),
 				start,
 				end: start,
 			});
-		} else if ['*', '/', '%'].contains(&char) {
+		} else if char == '-' {
 			tokens.push(Token {
-				token_type: TokenType::MulOperator,
-				value: char.to_string(),
+				value: TokenValue::AddOperator(AddOperator::Sub),
+				start,
+				end: start,
+			});
+		} else if char == '*' {
+			tokens.push(Token {
+				value: TokenValue::MulOperator(MulOperator::Mul),
+				start,
+				end: start,
+			});
+		} else if char == '/' {
+			tokens.push(Token {
+				value: TokenValue::MulOperator(MulOperator::Div),
+				start,
+				end: start,
+			});
+		} else if char == '%' {
+			tokens.push(Token {
+				value: TokenValue::MulOperator(MulOperator::Mod),
 				start,
 				end: start,
 			});
 		} else if char == '=' {
 			tokens.push(Token {
-				token_type: TokenType::Equals,
-				value: char.to_string(),
+				value: TokenValue::Equals,
 				start,
 				end: start,
 			});
 		} else if char == '$' {
 			tokens.push(Token {
-				token_type: TokenType::LastResult,
-				value: char.to_string(),
+				value: TokenValue::LastResult,
 				start,
 				end: start,
 			});
@@ -69,12 +81,14 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 				}
 				break;
 			}
-			tokens.push(Token {
-				token_type: TokenType::Number,
-				value,
-				start,
-				end,
-			});
+			match value.parse() {
+				Ok(number) => tokens.push(Token {
+					value: TokenValue::Number(number),
+					start,
+					end,
+				}),
+				Err(_) => return Err(Error::Fatal("Cannot parse number!".to_owned())),
+			}
 			start = end;
 		} else if char.is_ascii_alphabetic() {
 			let mut value = char.to_string();
@@ -90,12 +104,11 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 				break;
 			}
 			tokens.push(Token {
-				token_type: if value == "let" {
-					TokenType::Let
+				value: if value == "let" {
+					TokenValue::Let
 				} else {
-					TokenType::Identifier
+					TokenValue::Identifier(value)
 				},
-				value,
 				start,
 				end,
 			});
@@ -107,8 +120,7 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 		start += 1;
 	}
 	tokens.push(Token {
-		token_type: TokenType::Eof,
-		value: String::from("Eof"),
+		value: TokenValue::Eof,
 		start,
 		end: start,
 	});
@@ -126,8 +138,7 @@ mod tests {
 		assert_eq!(
 			tokenize("   \n\n   \t\t		").unwrap().collect::<Vec<Token>>(),
 			vec![Token {
-				token_type: TokenType::Eof,
-				value: String::from("Eof"),
+				value: TokenValue::Eof,
 				start: 12,
 				end: 12
 			}]
@@ -140,20 +151,17 @@ mod tests {
 			tokenize("9 44.4").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::Number,
-					value: String::from("9"),
+					value: TokenValue::Number(9.0),
 					start: 0,
 					end: 0
 				},
 				Token {
-					token_type: TokenType::Number,
-					value: String::from("44.4"),
+					value: TokenValue::Number(44.4),
 					start: 2,
 					end: 5
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 6,
 					end: 6
 				}
@@ -167,20 +175,17 @@ mod tests {
 			tokenize("+-").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::AddOperator,
-					value: String::from("+"),
+					value: TokenValue::AddOperator(AddOperator::Add),
 					start: 0,
 					end: 0
 				},
 				Token {
-					token_type: TokenType::AddOperator,
-					value: String::from("-"),
+					value: TokenValue::AddOperator(AddOperator::Sub),
 					start: 1,
 					end: 1
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 2,
 					end: 2
 				}
@@ -194,26 +199,22 @@ mod tests {
 			tokenize("*/%").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::MulOperator,
-					value: String::from("*"),
+					value: TokenValue::MulOperator(MulOperator::Mul),
 					start: 0,
 					end: 0
 				},
 				Token {
-					token_type: TokenType::MulOperator,
-					value: String::from("/"),
+					value: TokenValue::MulOperator(MulOperator::Div),
 					start: 1,
 					end: 1
 				},
 				Token {
-					token_type: TokenType::MulOperator,
-					value: String::from("%"),
+					value: TokenValue::MulOperator(MulOperator::Mod),
 					start: 2,
 					end: 2
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 3,
 					end: 3
 				}
@@ -227,20 +228,17 @@ mod tests {
 			tokenize("()").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::OpenBracket,
-					value: String::from("("),
+					value: TokenValue::OpenBracket,
 					start: 0,
 					end: 0
 				},
 				Token {
-					token_type: TokenType::CloseBracket,
-					value: String::from(")"),
+					value: TokenValue::CloseBracket,
 					start: 1,
 					end: 1
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 2,
 					end: 2
 				}
@@ -254,20 +252,17 @@ mod tests {
 			tokenize("= 4").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::Equals,
-					value: String::from("="),
+					value: TokenValue::Equals,
 					start: 0,
 					end: 0
 				},
 				Token {
-					token_type: TokenType::Number,
-					value: String::from("4"),
+					value: TokenValue::Number(4.0),
 					start: 2,
 					end: 2
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 3,
 					end: 3
 				}
@@ -281,20 +276,17 @@ mod tests {
 			tokenize("Id id123").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::Identifier,
-					value: String::from("Id"),
+					value: TokenValue::Identifier("Id".to_owned()),
 					start: 0,
 					end: 1
 				},
 				Token {
-					token_type: TokenType::Identifier,
-					value: String::from("id123"),
+					value: TokenValue::Identifier("id123".to_owned()),
 					start: 3,
 					end: 7
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 8,
 					end: 8
 				}
@@ -305,20 +297,17 @@ mod tests {
 			tokenize("4id").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::Number,
-					value: String::from("4"),
+					value: TokenValue::Number(4.0),
 					start: 0,
 					end: 0
 				},
 				Token {
-					token_type: TokenType::Identifier,
-					value: String::from("id"),
+					value: TokenValue::Identifier("id".to_owned()),
 					start: 1,
 					end: 2
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 3,
 					end: 3
 				}
@@ -340,26 +329,22 @@ mod tests {
 			tokenize("a$4").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::Identifier,
-					value: String::from("a"),
+					value: TokenValue::Identifier("a".to_owned()),
 					start: 0,
 					end: 0
 				},
 				Token {
-					token_type: TokenType::LastResult,
-					value: String::from("$"),
+					value: TokenValue::LastResult,
 					start: 1,
 					end: 1
 				},
 				Token {
-					token_type: TokenType::Number,
-					value: String::from("4"),
+					value: TokenValue::Number(4.0),
 					start: 2,
 					end: 2
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 3,
 					end: 3
 				}
@@ -373,20 +358,17 @@ mod tests {
 			tokenize("let a").unwrap().collect::<Vec<Token>>(),
 			vec![
 				Token {
-					token_type: TokenType::Let,
-					value: String::from("let"),
+					value: TokenValue::Let,
 					start: 0,
 					end: 2
 				},
 				Token {
-					token_type: TokenType::Identifier,
-					value: String::from("a"),
+					value: TokenValue::Identifier("a".to_owned()),
 					start: 4,
 					end: 4
 				},
 				Token {
-					token_type: TokenType::Eof,
-					value: String::from("Eof"),
+					value: TokenValue::Eof,
 					start: 5,
 					end: 5
 				}
