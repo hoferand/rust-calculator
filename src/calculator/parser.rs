@@ -198,11 +198,7 @@ mod tests {
 
 	// only needed for testing
 	fn new_t(value: TokenValue) -> Token {
-		Token {
-			value,
-			start: 0,
-			end: 0,
-		}
+		Token::new(value, 0, 0)
 	}
 
 	#[test]

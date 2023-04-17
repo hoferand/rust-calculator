@@ -11,59 +11,43 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 			start += 1;
 			continue;
 		} else if char == '(' {
-			tokens.push(Token {
-				value: TokenValue::OpenBracket,
-				start,
-				end: start,
-			});
+			tokens.push(Token::new(TokenValue::OpenBracket, start, start));
 		} else if char == ')' {
-			tokens.push(Token {
-				value: TokenValue::CloseBracket,
-				start,
-				end: start,
-			});
+			tokens.push(Token::new(TokenValue::CloseBracket, start, start));
 		} else if char == '+' {
-			tokens.push(Token {
-				value: TokenValue::AddOperator(AddOperator::Add),
+			tokens.push(Token::new(
+				TokenValue::AddOperator(AddOperator::Add),
 				start,
-				end: start,
-			});
+				start,
+			));
 		} else if char == '-' {
-			tokens.push(Token {
-				value: TokenValue::AddOperator(AddOperator::Sub),
+			tokens.push(Token::new(
+				TokenValue::AddOperator(AddOperator::Sub),
 				start,
-				end: start,
-			});
+				start,
+			));
 		} else if char == '*' {
-			tokens.push(Token {
-				value: TokenValue::MulOperator(MulOperator::Mul),
+			tokens.push(Token::new(
+				TokenValue::MulOperator(MulOperator::Mul),
 				start,
-				end: start,
-			});
+				start,
+			));
 		} else if char == '/' {
-			tokens.push(Token {
-				value: TokenValue::MulOperator(MulOperator::Div),
+			tokens.push(Token::new(
+				TokenValue::MulOperator(MulOperator::Div),
 				start,
-				end: start,
-			});
+				start,
+			));
 		} else if char == '%' {
-			tokens.push(Token {
-				value: TokenValue::MulOperator(MulOperator::Mod),
+			tokens.push(Token::new(
+				TokenValue::MulOperator(MulOperator::Mod),
 				start,
-				end: start,
-			});
+				start,
+			));
 		} else if char == '=' {
-			tokens.push(Token {
-				value: TokenValue::Equals,
-				start,
-				end: start,
-			});
+			tokens.push(Token::new(TokenValue::Equals, start, start));
 		} else if char == '$' {
-			tokens.push(Token {
-				value: TokenValue::LastResult,
-				start,
-				end: start,
-			});
+			tokens.push(Token::new(TokenValue::LastResult, start, start));
 		} else if char.is_ascii_digit() {
 			let mut value = char.to_string();
 			let mut point_cnt = 0;
@@ -82,11 +66,7 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 				break;
 			}
 			match value.parse() {
-				Ok(number) => tokens.push(Token {
-					value: TokenValue::Number(number),
-					start,
-					end,
-				}),
+				Ok(number) => tokens.push(Token::new(TokenValue::Number(number), start, end)),
 				Err(_) => return Err(Error::Fatal("Cannot parse number!".to_owned())),
 			}
 			start = end;
@@ -103,15 +83,11 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 				}
 				break;
 			}
-			tokens.push(Token {
-				value: if value == "let" {
-					TokenValue::Let
-				} else {
-					TokenValue::Identifier(value)
-				},
-				start,
-				end,
-			});
+			if value == "let" {
+				tokens.push(Token::new(TokenValue::Let, start, end))
+			} else {
+				tokens.push(Token::new(TokenValue::Identifier(value), start, end))
+			}
 			start = end;
 		} else {
 			return Err(Error::InvalidCharacter(char, start));
@@ -119,11 +95,7 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 
 		start += 1;
 	}
-	tokens.push(Token {
-		value: TokenValue::Eof,
-		start,
-		end: start,
-	});
+	tokens.push(Token::new(TokenValue::Eof, start, start));
 
 	Ok(tokens.into_iter())
 }
@@ -137,11 +109,7 @@ mod tests {
 	fn test_01_blank_input() {
 		assert_eq!(
 			tokenize("   \n\n   \t\t		").unwrap().collect::<Vec<Token>>(),
-			vec![Token {
-				value: TokenValue::Eof,
-				start: 12,
-				end: 12
-			}]
+			vec![Token::new(TokenValue::Eof, 12, 12)]
 		);
 	}
 
@@ -150,21 +118,9 @@ mod tests {
 		assert_eq!(
 			tokenize("9 44.4").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::Number(9.0),
-					start: 0,
-					end: 0
-				},
-				Token {
-					value: TokenValue::Number(44.4),
-					start: 2,
-					end: 5
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 6,
-					end: 6
-				}
+				Token::new(TokenValue::Number(9.0), 0, 0),
+				Token::new(TokenValue::Number(44.4), 2, 5),
+				Token::new(TokenValue::Eof, 6, 6)
 			]
 		);
 	}
@@ -174,21 +130,9 @@ mod tests {
 		assert_eq!(
 			tokenize("+-").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::AddOperator(AddOperator::Add),
-					start: 0,
-					end: 0
-				},
-				Token {
-					value: TokenValue::AddOperator(AddOperator::Sub),
-					start: 1,
-					end: 1
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 2,
-					end: 2
-				}
+				Token::new(TokenValue::AddOperator(AddOperator::Add), 0, 0),
+				Token::new(TokenValue::AddOperator(AddOperator::Sub), 1, 1),
+				Token::new(TokenValue::Eof, 2, 2)
 			]
 		);
 	}
@@ -198,26 +142,10 @@ mod tests {
 		assert_eq!(
 			tokenize("*/%").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::MulOperator(MulOperator::Mul),
-					start: 0,
-					end: 0
-				},
-				Token {
-					value: TokenValue::MulOperator(MulOperator::Div),
-					start: 1,
-					end: 1
-				},
-				Token {
-					value: TokenValue::MulOperator(MulOperator::Mod),
-					start: 2,
-					end: 2
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 3,
-					end: 3
-				}
+				Token::new(TokenValue::MulOperator(MulOperator::Mul), 0, 0),
+				Token::new(TokenValue::MulOperator(MulOperator::Div), 1, 1),
+				Token::new(TokenValue::MulOperator(MulOperator::Mod), 2, 2),
+				Token::new(TokenValue::Eof, 3, 3)
 			]
 		);
 	}
@@ -227,21 +155,9 @@ mod tests {
 		assert_eq!(
 			tokenize("()").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::OpenBracket,
-					start: 0,
-					end: 0
-				},
-				Token {
-					value: TokenValue::CloseBracket,
-					start: 1,
-					end: 1
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 2,
-					end: 2
-				}
+				Token::new(TokenValue::OpenBracket, 0, 0),
+				Token::new(TokenValue::CloseBracket, 1, 1),
+				Token::new(TokenValue::Eof, 2, 2)
 			]
 		);
 	}
@@ -251,21 +167,9 @@ mod tests {
 		assert_eq!(
 			tokenize("= 4").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::Equals,
-					start: 0,
-					end: 0
-				},
-				Token {
-					value: TokenValue::Number(4.0),
-					start: 2,
-					end: 2
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 3,
-					end: 3
-				}
+				Token::new(TokenValue::Equals, 0, 0),
+				Token::new(TokenValue::Number(4.0), 2, 2),
+				Token::new(TokenValue::Eof, 3, 3)
 			]
 		);
 	}
@@ -275,42 +179,18 @@ mod tests {
 		assert_eq!(
 			tokenize("Id id123").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::Identifier("Id".to_owned()),
-					start: 0,
-					end: 1
-				},
-				Token {
-					value: TokenValue::Identifier("id123".to_owned()),
-					start: 3,
-					end: 7
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 8,
-					end: 8
-				}
+				Token::new(TokenValue::Identifier("Id".to_owned()), 0, 1),
+				Token::new(TokenValue::Identifier("id123".to_owned()), 3, 7),
+				Token::new(TokenValue::Eof, 8, 8)
 			]
 		);
 
 		assert_eq!(
 			tokenize("4id").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::Number(4.0),
-					start: 0,
-					end: 0
-				},
-				Token {
-					value: TokenValue::Identifier("id".to_owned()),
-					start: 1,
-					end: 2
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 3,
-					end: 3
-				}
+				Token::new(TokenValue::Number(4.0), 0, 0),
+				Token::new(TokenValue::Identifier("id".to_owned()), 1, 2),
+				Token::new(TokenValue::Eof, 3, 3)
 			]
 		);
 	}
@@ -328,26 +208,10 @@ mod tests {
 		assert_eq!(
 			tokenize("a$4").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::Identifier("a".to_owned()),
-					start: 0,
-					end: 0
-				},
-				Token {
-					value: TokenValue::LastResult,
-					start: 1,
-					end: 1
-				},
-				Token {
-					value: TokenValue::Number(4.0),
-					start: 2,
-					end: 2
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 3,
-					end: 3
-				}
+				Token::new(TokenValue::Identifier("a".to_owned()), 0, 0),
+				Token::new(TokenValue::LastResult, 1, 1),
+				Token::new(TokenValue::Number(4.0), 2, 2),
+				Token::new(TokenValue::Eof, 3, 3)
 			]
 		);
 	}
@@ -357,21 +221,9 @@ mod tests {
 		assert_eq!(
 			tokenize("let a").unwrap().collect::<Vec<Token>>(),
 			vec![
-				Token {
-					value: TokenValue::Let,
-					start: 0,
-					end: 2
-				},
-				Token {
-					value: TokenValue::Identifier("a".to_owned()),
-					start: 4,
-					end: 4
-				},
-				Token {
-					value: TokenValue::Eof,
-					start: 5,
-					end: 5
-				}
+				Token::new(TokenValue::Let, 0, 2),
+				Token::new(TokenValue::Identifier("a".to_owned()), 4, 4),
+				Token::new(TokenValue::Eof, 5, 5)
 			]
 		);
 	}

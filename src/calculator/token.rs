@@ -5,6 +5,12 @@ pub struct Token {
 	pub end: usize,
 }
 
+impl Token {
+	pub fn new(value: TokenValue, start: usize, end: usize) -> Token {
+		Token { value, start, end }
+	}
+}
+
 #[derive(Debug, PartialEq)]
 pub enum TokenValue {
 	Number(f32),
