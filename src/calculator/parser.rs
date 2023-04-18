@@ -102,13 +102,13 @@ fn evaluate_multiplicative(
 				TokenValue::MulOperator(MulOperator::Mul) => left *= right,
 				TokenValue::MulOperator(MulOperator::Div) => {
 					if right == 0.0 {
-						return Err(Error::Fatal(String::from("Division by 0!")));
+						return Err(Error::Fatal("Division by 0!".to_owned()));
 					}
 					left /= right
 				}
 				TokenValue::MulOperator(MulOperator::Mod) => {
 					if right == 0.0 {
-						return Err(Error::Fatal(String::from("Division by 0!")));
+						return Err(Error::Fatal("Division by 0!".to_owned()));
 					}
 					left %= right
 				}
@@ -176,7 +176,7 @@ fn consume(
 			))
 		}
 	} else {
-		Err(Error::Fatal(String::from("Unexpected end of input!")))
+		Err(Error::Fatal("Unexpected end of input!".to_owned()))
 	}
 }
 
@@ -189,7 +189,7 @@ fn unexpected_token(token: Token) -> Result<f32, Error> {
 }
 
 fn unexpected_end_of_input() -> Result<f32, Error> {
-	Err(Error::Fatal(String::from("Unexpected end of input!")))
+	Err(Error::Fatal("Unexpected end of input!".to_owned()))
 }
 
 #[cfg(test)]

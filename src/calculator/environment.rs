@@ -39,27 +39,27 @@ impl Environment {
 	}
 
 	pub fn init(&mut self) {
-		self.variables.insert(String::from("pi"), Variable::Var(PI));
-		self.variables.insert(String::from("e"), Variable::Var(E));
+		self.variables.insert("pi".to_owned(), Variable::Var(PI));
+		self.variables.insert("e".to_owned(), Variable::Var(E));
 
 		self.variables
-			.insert(String::from("sqrt"), Variable::Fn(|x| x.sqrt().round()));
+			.insert("sqrt".to_owned(), Variable::Fn(|x| x.sqrt().round()));
 		self.variables
-			.insert(String::from("sin"), Variable::Fn(|x| x.sin()));
+			.insert("sin".to_owned(), Variable::Fn(|x| x.sin()));
 		self.variables
-			.insert(String::from("asin"), Variable::Fn(|x| x.asin()));
+			.insert("asin".to_owned(), Variable::Fn(|x| x.asin()));
 		self.variables
-			.insert(String::from("cos"), Variable::Fn(|x| x.cos()));
+			.insert("cos".to_owned(), Variable::Fn(|x| x.cos()));
 		self.variables
-			.insert(String::from("acos"), Variable::Fn(|x| x.acos()));
+			.insert("acos".to_owned(), Variable::Fn(|x| x.acos()));
 		self.variables
-			.insert(String::from("tan"), Variable::Fn(|x| x.tan()));
+			.insert("tan".to_owned(), Variable::Fn(|x| x.tan()));
 		self.variables
-			.insert(String::from("atan"), Variable::Fn(|x| x.atan()));
+			.insert("atan".to_owned(), Variable::Fn(|x| x.atan()));
 		self.variables
-			.insert(String::from("r2d"), Variable::Fn(|x| (x * 180.0) / PI));
+			.insert("r2d".to_owned(), Variable::Fn(|x| (x * 180.0) / PI));
 		self.variables
-			.insert(String::from("d2r"), Variable::Fn(|x| (x * PI) / 180.0));
+			.insert("d2r".to_owned(), Variable::Fn(|x| (x * PI) / 180.0));
 	}
 }
 
@@ -70,8 +70,8 @@ mod tests {
 	#[test]
 	fn test_01_assignment() {
 		let mut env = Environment::new();
-		assert_eq!(env.assign(String::from("var1"), 34.5), 34.5);
-		match env.get(String::from("var1")) {
+		assert_eq!(env.assign("var1".to_owned(), 34.5), 34.5);
+		match env.get("var1".to_owned()) {
 			Some(val) => match val {
 				Variable::Var(val) => assert_eq!(*val, 34.5),
 				_ => assert!(false),
@@ -83,7 +83,7 @@ mod tests {
 	#[test]
 	fn test_02_get_undefined() {
 		let mut env = Environment::new();
-		match env.get(String::from("xyz")) {
+		match env.get("xyz".to_owned()) {
 			None => assert!(true),
 			_ => assert!(false),
 		}
@@ -93,7 +93,7 @@ mod tests {
 	fn test_03_init() {
 		let mut env = Environment::new();
 		env.init();
-		match env.get(String::from("pi")) {
+		match env.get("pi".to_owned()) {
 			Some(val) => match val {
 				Variable::Var(val) => assert_eq!(*val, PI),
 				_ => assert!(false),
@@ -101,7 +101,7 @@ mod tests {
 			_ => assert!(false),
 		}
 
-		match env.get(String::from("sqrt")) {
+		match env.get("sqrt".to_owned()) {
 			Some(var) => match var {
 				Variable::Fn(var) => assert_eq!(var(4.0), 2.0),
 				_ => assert!(false),
