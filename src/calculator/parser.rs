@@ -64,20 +64,22 @@ fn evaluate_additive(
 	let mut left = evaluate_multiplicative(tokens, env)?;
 
 	while let Some(Token {
-		value: TokenValue::AddOperator(_),
+		value: TokenValue::AddOperator(op),
 		start: _,
 		end: _,
 	}) = tokens.peek()
 	{
-		if let Some(op) = tokens.next() {
-			let right = evaluate_multiplicative(tokens, env)?;
-			match op.value {
-				TokenValue::AddOperator(AddOperator::Add) => left += right,
-				TokenValue::AddOperator(AddOperator::Sub) => left -= right,
-				_ => return unexpected_token(op),
+		match op {
+			AddOperator::Add => {
+				consume(tokens, TokenValue::AddOperator(AddOperator::Add))?;
+				let right = evaluate_multiplicative(tokens, env)?;
+				left += right
 			}
-		} else {
-			break;
+			AddOperator::Sub => {
+				consume(tokens, TokenValue::AddOperator(AddOperator::Sub))?;
+				let right = evaluate_multiplicative(tokens, env)?;
+				left -= right
+			}
 		}
 	}
 
@@ -91,31 +93,33 @@ fn evaluate_multiplicative(
 	let mut left = evaluate_atomic(tokens, env)?;
 
 	while let Some(Token {
-		value: TokenValue::MulOperator(_),
+		value: TokenValue::MulOperator(op),
 		start: _,
 		end: _,
 	}) = tokens.peek()
 	{
-		if let Some(op) = tokens.next() {
-			let right = evaluate_multiplicative(tokens, env)?;
-			match op.value {
-				TokenValue::MulOperator(MulOperator::Mul) => left *= right,
-				TokenValue::MulOperator(MulOperator::Div) => {
-					if right == 0.0 {
-						return Err(Error::Fatal("Division by 0!".to_owned()));
-					}
-					left /= right
-				}
-				TokenValue::MulOperator(MulOperator::Mod) => {
-					if right == 0.0 {
-						return Err(Error::Fatal("Division by 0!".to_owned()));
-					}
-					left %= right
-				}
-				_ => return unexpected_token(op),
+		match op {
+			MulOperator::Mul => {
+				consume(tokens, TokenValue::MulOperator(MulOperator::Mul))?;
+				let right = evaluate_atomic(tokens, env)?;
+				left *= right
 			}
-		} else {
-			break;
+			MulOperator::Div => {
+				consume(tokens, TokenValue::MulOperator(MulOperator::Div))?;
+				let right = evaluate_atomic(tokens, env)?;
+				if right == 0.0 {
+					return Err(Error::Fatal("Division by 0!".to_owned()));
+				}
+				left /= right
+			}
+			MulOperator::Mod => {
+				consume(tokens, TokenValue::MulOperator(MulOperator::Mod))?;
+				let right = evaluate_atomic(tokens, env)?;
+				if right == 0.0 {
+					return Err(Error::Fatal("Division by 0!".to_owned()));
+				}
+				left %= right
+			}
 		}
 	}
 
@@ -163,10 +167,10 @@ fn evaluate_atomic(
 
 fn consume(
 	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	token_type: TokenValue,
+	value: TokenValue,
 ) -> Result<Token, Error> {
 	if let Some(token) = tokens.next() {
-		if token.value == token_type {
+		if token.value == value {
 			Ok(token)
 		} else {
 			Err(Error::UnexpectedToken(
