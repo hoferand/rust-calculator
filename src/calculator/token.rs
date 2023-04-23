@@ -1,13 +1,19 @@
 #[derive(Debug, PartialEq)]
 pub struct Token {
 	pub value: TokenValue,
+	pub src: String,
 	pub start: usize,
 	pub end: usize,
 }
 
 impl Token {
-	pub fn new(value: TokenValue, start: usize, end: usize) -> Token {
-		Token { value, start, end }
+	pub fn new(value: TokenValue, src: String, start: usize, end: usize) -> Token {
+		Token {
+			value,
+			src,
+			start,
+			end,
+		}
 	}
 }
 
@@ -25,36 +31,10 @@ pub enum TokenValue {
 	Eof,
 }
 
-impl ToString for TokenValue {
-	fn to_string(&self) -> String {
-		match self {
-			Self::Number(v) => v.to_string(),
-			Self::AddOperator(o) => o.to_string(),
-			Self::MulOperator(o) => o.to_string(),
-			Self::OpenBracket => "(".to_owned(),
-			Self::CloseBracket => ")".to_owned(),
-			Self::Identifier(i) => i.to_owned(),
-			Self::Let => "let".to_owned(),
-			Self::Equals => "=".to_owned(),
-			Self::LastResult => "$".to_owned(),
-			Self::Eof => "EOF".to_owned(),
-		}
-	}
-}
-
 #[derive(Debug, PartialEq)]
 pub enum AddOperator {
 	Add,
 	Sub,
-}
-
-impl ToString for AddOperator {
-	fn to_string(&self) -> String {
-		match self {
-			Self::Add => "+".to_owned(),
-			Self::Sub => "-".to_owned(),
-		}
-	}
 }
 
 #[derive(Debug, PartialEq)]
@@ -62,14 +42,4 @@ pub enum MulOperator {
 	Mul,
 	Div,
 	Mod,
-}
-
-impl ToString for MulOperator {
-	fn to_string(&self) -> String {
-		match self {
-			Self::Mul => "*".to_owned(),
-			Self::Div => "/".to_owned(),
-			Self::Mod => "%".to_owned(),
-		}
-	}
 }

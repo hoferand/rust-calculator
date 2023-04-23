@@ -65,6 +65,7 @@ fn evaluate_additive(
 
 	while let Some(Token {
 		value: TokenValue::AddOperator(op),
+		src: _,
 		start: _,
 		end: _,
 	}) = tokens.peek()
@@ -94,6 +95,7 @@ fn evaluate_multiplicative(
 
 	while let Some(Token {
 		value: TokenValue::MulOperator(op),
+		src: _,
 		start: _,
 		end: _,
 	}) = tokens.peek()
@@ -142,11 +144,7 @@ fn evaluate_atomic(
 			},
 			TokenValue::LastResult => match env.get_last_result() {
 				Some(var) => Ok(var),
-				_ => Err(Error::VariableNotFound(
-					token.value.to_string(),
-					token.start,
-					token.end,
-				)),
+				_ => Err(Error::VariableNotFound(token.src, token.start, token.end)),
 			},
 			TokenValue::AddOperator(op) => match op {
 				AddOperator::Add => evaluate_atomic(tokens, env),
@@ -173,11 +171,7 @@ fn consume(
 		if token.value == value {
 			Ok(token)
 		} else {
-			Err(Error::UnexpectedToken(
-				token.value.to_string(),
-				token.start,
-				token.end,
-			))
+			Err(Error::UnexpectedToken(token.src, token.start, token.end))
 		}
 	} else {
 		Err(Error::Fatal("Unexpected end of input!".to_owned()))
@@ -185,11 +179,7 @@ fn consume(
 }
 
 fn unexpected_token(token: Token) -> Result<f32, Error> {
-	Err(Error::UnexpectedToken(
-		token.value.to_string(),
-		token.start,
-		token.end,
-	))
+	Err(Error::UnexpectedToken(token.src, token.start, token.end))
 }
 
 fn unexpected_end_of_input() -> Result<f32, Error> {
@@ -202,7 +192,7 @@ mod tests {
 
 	// only needed for testing
 	fn new_t(value: TokenValue) -> Token {
-		Token::new(value, 0, 0)
+		Token::new(value, "".to_owned(), 0, 0)
 	}
 
 	#[test]
