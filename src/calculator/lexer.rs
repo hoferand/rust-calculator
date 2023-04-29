@@ -6,123 +6,113 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 	let mut chars = input.chars().peekable();
 	let mut start = 0;
 	while let Some(char) = chars.next() {
-		if [' ', '\n', '\t'].contains(&char) {
-			// ignore spaces, line breaks and tabs
-			start += 1;
-			continue;
-		} else if char == '(' {
-			tokens.push(Token::new(
+		match char {
+			' ' | '\n' | '\t' => (), // ignore spaces, line breaks and tabs
+			'(' => tokens.push(Token::new(
 				TokenValue::OpenBracket,
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == ')' {
-			tokens.push(Token::new(
+			)),
+			')' => tokens.push(Token::new(
 				TokenValue::CloseBracket,
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == '+' {
-			tokens.push(Token::new(
+			)),
+			'+' => tokens.push(Token::new(
 				TokenValue::AddOperator(AddOperator::Add),
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == '-' {
-			tokens.push(Token::new(
+			)),
+			'-' => tokens.push(Token::new(
 				TokenValue::AddOperator(AddOperator::Sub),
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == '*' {
-			tokens.push(Token::new(
+			)),
+			'*' => tokens.push(Token::new(
 				TokenValue::MulOperator(MulOperator::Mul),
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == '/' {
-			tokens.push(Token::new(
+			)),
+			'/' => tokens.push(Token::new(
 				TokenValue::MulOperator(MulOperator::Div),
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == '%' {
-			tokens.push(Token::new(
+			)),
+			'%' => tokens.push(Token::new(
 				TokenValue::MulOperator(MulOperator::Mod),
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == '=' {
-			tokens.push(Token::new(
+			)),
+			'=' => tokens.push(Token::new(
 				TokenValue::Equals,
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char == '$' {
-			tokens.push(Token::new(
+			)),
+			'$' => tokens.push(Token::new(
 				TokenValue::LastResult,
 				char.to_string(),
 				start,
 				start,
-			));
-		} else if char.is_ascii_digit() {
-			let mut value = char.to_string();
-			let mut point_cnt = 0;
-			let mut end = start;
-			while let Some(n_char) = chars.peek() {
-				if n_char.is_numeric() || (*n_char == '.' && point_cnt == 0) {
-					if let Some(char) = chars.next() {
-						if char == '.' {
-							point_cnt += 1;
+			)),
+			c if c.is_ascii_digit() => {
+				let mut value = c.to_string();
+				let mut point = false;
+				let mut end = start;
+				while let Some(n_char) = chars.peek() {
+					if n_char.is_numeric() || (*n_char == '.' && !point) {
+						if let Some(char) = chars.next() {
+							if char == '.' {
+								point = true;
+							}
+							value.push(char);
+							end += 1;
+							continue;
 						}
-						value.push(char);
-						end += 1;
-						continue;
 					}
+					break;
 				}
-				break;
-			}
-			match value.parse() {
-				Ok(number) => {
-					tokens.push(Token::new(TokenValue::Number(number), value, start, end))
-				}
-				Err(_) => return Err(Error::Fatal("Cannot parse number!".to_owned())),
-			}
-			start = end;
-		} else if char.is_ascii_alphabetic() {
-			let mut value = char.to_string();
-			let mut end = start;
-			while let Some(n_char) = chars.peek() {
-				if n_char.is_ascii_alphanumeric() {
-					if let Some(char) = chars.next() {
-						value.push(char);
-						end += 1;
-						continue;
+				match value.parse() {
+					Ok(number) => {
+						tokens.push(Token::new(TokenValue::Number(number), value, start, end))
 					}
+					Err(_) => return Err(Error::Fatal("Cannot parse number!".to_owned())),
 				}
-				break;
+				start = end;
 			}
-			if &value == "let" {
-				tokens.push(Token::new(TokenValue::Let, value, start, end))
-			} else {
-				tokens.push(Token::new(
-					TokenValue::Identifier(value.clone()),
-					value,
-					start,
-					end,
-				))
+			c if c.is_ascii_alphabetic() => {
+				let mut value = c.to_string();
+				let mut end = start;
+				while let Some(n_char) = chars.peek() {
+					if n_char.is_ascii_alphanumeric() {
+						if let Some(char) = chars.next() {
+							value.push(char);
+							end += 1;
+							continue;
+						}
+					}
+					break;
+				}
+				if value == "let" {
+					tokens.push(Token::new(TokenValue::Let, value, start, end))
+				} else {
+					tokens.push(Token::new(
+						TokenValue::Identifier(value.clone()),
+						value,
+						start,
+						end,
+					))
+				}
+				start = end;
 			}
-			start = end;
-		} else {
-			return Err(Error::InvalidCharacter(char, start));
+			c => return Err(Error::InvalidCharacter(c, start)),
 		}
 
 		start += 1;
