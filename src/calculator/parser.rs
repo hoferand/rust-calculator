@@ -32,7 +32,7 @@ fn evaluate_assignment(tokens: &mut Cursor, env: &mut Environment) -> Result<f32
 			let value = evaluate_statement(tokens, env)?;
 			Ok(env.assign(id, value))
 		}
-		TokenValue::Eof => unexpected_end_of_input(2),
+		TokenValue::Eof => unexpected_end_of_input(),
 		_ => unexpected_token(token),
 	}
 }
@@ -113,7 +113,7 @@ fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Er
 			tokens.expect(TokenValue::CloseBracket)?;
 			value
 		}
-		TokenValue::Eof => unexpected_end_of_input(3),
+		TokenValue::Eof => unexpected_end_of_input(),
 		_ => unexpected_token(token),
 	}
 }
@@ -122,8 +122,8 @@ fn unexpected_token(token: Token) -> Result<f32, Error> {
 	Err(Error::UnexpectedToken(token.src, token.start, token.end))
 }
 
-fn unexpected_end_of_input(id: i32) -> Result<f32, Error> {
-	Err(Error::Fatal(format!("Unexpected end of input! {}", id)))
+fn unexpected_end_of_input() -> Result<f32, Error> {
+	Err(Error::Fatal("Unexpected end of input!".to_owned()))
 }
 
 #[cfg(test)]
