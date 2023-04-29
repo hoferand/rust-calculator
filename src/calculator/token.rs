@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
 	pub value: TokenValue,
 	pub src: String,
@@ -15,9 +15,17 @@ impl Token {
 			end,
 		}
 	}
+
+	pub fn is_add_op(&self) -> bool {
+		matches!(self.value, TokenValue::AddOperator(_))
+	}
+
+	pub fn is_mul_op(&self) -> bool {
+		matches!(self.value, TokenValue::MulOperator(_))
+	}
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenValue {
 	Number(f32),
 	AddOperator(AddOperator),
@@ -31,13 +39,13 @@ pub enum TokenValue {
 	Eof,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum AddOperator {
 	Add,
 	Sub,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum MulOperator {
 	Mul,
 	Div,

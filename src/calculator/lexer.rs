@@ -1,7 +1,7 @@
 use crate::calculator::error::Error;
 use crate::calculator::token::{AddOperator, MulOperator, Token, TokenValue};
 
-pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
+pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
 	let mut chars = input.chars().peekable();
 	let mut start = 0;
@@ -119,7 +119,7 @@ pub fn tokenize(input: &str) -> Result<impl Iterator<Item = Token>, Error> {
 	}
 	tokens.push(Token::new(TokenValue::Eof, "EOF".to_string(), start, start));
 
-	Ok(tokens.into_iter())
+	Ok(tokens)
 }
 
 #[cfg(test)]
@@ -130,7 +130,7 @@ mod tests {
 	#[test]
 	fn test_01_blank_input() {
 		assert_eq!(
-			tokenize("   \n\n   \t\t		").unwrap().collect::<Vec<Token>>(),
+			tokenize("   \n\n   \t\t		").unwrap(),
 			vec![Token::new(TokenValue::Eof, "EOF".to_owned(), 12, 12)]
 		);
 	}
@@ -138,7 +138,7 @@ mod tests {
 	#[test]
 	fn test_02_numerical_literal() {
 		assert_eq!(
-			tokenize("9 44.4").unwrap().collect::<Vec<Token>>(),
+			tokenize("9 44.4").unwrap(),
 			vec![
 				Token::new(TokenValue::Number(9.0), "9".to_owned(), 0, 0),
 				Token::new(TokenValue::Number(44.4), "44.4".to_owned(), 2, 5),
@@ -150,7 +150,7 @@ mod tests {
 	#[test]
 	fn test_03_add_operator_literal() {
 		assert_eq!(
-			tokenize("+-").unwrap().collect::<Vec<Token>>(),
+			tokenize("+-").unwrap(),
 			vec![
 				Token::new(
 					TokenValue::AddOperator(AddOperator::Add),
@@ -172,7 +172,7 @@ mod tests {
 	#[test]
 	fn test_04_mul_operator_literal() {
 		assert_eq!(
-			tokenize("*/%").unwrap().collect::<Vec<Token>>(),
+			tokenize("*/%").unwrap(),
 			vec![
 				Token::new(
 					TokenValue::MulOperator(MulOperator::Mul),
@@ -200,7 +200,7 @@ mod tests {
 	#[test]
 	fn test_05_bracket_literal() {
 		assert_eq!(
-			tokenize("()").unwrap().collect::<Vec<Token>>(),
+			tokenize("()").unwrap(),
 			vec![
 				Token::new(TokenValue::OpenBracket, "(".to_owned(), 0, 0),
 				Token::new(TokenValue::CloseBracket, ")".to_owned(), 1, 1),
@@ -212,7 +212,7 @@ mod tests {
 	#[test]
 	fn test_06_equals_character() {
 		assert_eq!(
-			tokenize("= 4").unwrap().collect::<Vec<Token>>(),
+			tokenize("= 4").unwrap(),
 			vec![
 				Token::new(TokenValue::Equals, "=".to_owned(), 0, 0),
 				Token::new(TokenValue::Number(4.0), "4".to_owned(), 2, 2),
@@ -224,7 +224,7 @@ mod tests {
 	#[test]
 	fn test_07_identifier() {
 		assert_eq!(
-			tokenize("Id id123").unwrap().collect::<Vec<Token>>(),
+			tokenize("Id id123").unwrap(),
 			vec![
 				Token::new(
 					TokenValue::Identifier("Id".to_owned()),
@@ -243,7 +243,7 @@ mod tests {
 		);
 
 		assert_eq!(
-			tokenize("4id").unwrap().collect::<Vec<Token>>(),
+			tokenize("4id").unwrap(),
 			vec![
 				Token::new(TokenValue::Number(4.0), "4".to_owned(), 0, 0),
 				Token::new(
@@ -268,24 +268,12 @@ mod tests {
 	#[test]
 	fn test_09_last_result() {
 		assert_eq!(
-			tokenize("a$4").unwrap().collect::<Vec<Token>>(),
+			tokenize("a$4").unwrap(),
 			vec![
 				Token::new(TokenValue::Identifier("a".to_owned()), "a".to_owned(), 0, 0),
 				Token::new(TokenValue::LastResult, "$".to_owned(), 1, 1),
 				Token::new(TokenValue::Number(4.0), "4".to_owned(), 2, 2),
 				Token::new(TokenValue::Eof, "EOF".to_owned(), 3, 3)
-			]
-		);
-	}
-
-	#[test]
-	fn test_10_let() {
-		assert_eq!(
-			tokenize("let a").unwrap().collect::<Vec<Token>>(),
-			vec![
-				Token::new(TokenValue::Let, "let".to_owned(), 0, 2),
-				Token::new(TokenValue::Identifier("a".to_owned()), "a".to_owned(), 4, 4),
-				Token::new(TokenValue::Eof, "EOF".to_owned(), 5, 5)
 			]
 		);
 	}

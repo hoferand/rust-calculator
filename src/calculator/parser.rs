@@ -1,18 +1,14 @@
-use std::iter::Peekable;
-
+use crate::calculator::cursor::Cursor;
 use crate::calculator::environment::{Environment, Variable};
 use crate::calculator::error::Error;
 use crate::calculator::token::{AddOperator, MulOperator, Token, TokenValue};
 
-pub fn evaluate(
-	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	env: &mut Environment,
-) -> Result<f32, Error> {
+pub fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let result = evaluate_statement(tokens, env);
 
 	// check if all tokens are consumed
 	if let Ok(value) = result {
-		consume(tokens, TokenValue::Eof)?;
+		tokens.expect(TokenValue::Eof)?;
 		env.set_last_result(value);
 
 		return Ok(value);
@@ -21,160 +17,104 @@ pub fn evaluate(
 	result
 }
 
-fn evaluate_statement(
-	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	env: &mut Environment,
-) -> Result<f32, Error> {
-	let result;
-	if let Some(token) = tokens.peek() {
-		match token.value {
-			TokenValue::Let => result = evaluate_assignment(tokens, env),
-			_ => result = evaluate_additive(tokens, env),
-		}
-	} else {
-		return unexpected_end_of_input();
+fn evaluate_statement(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
+	match (tokens.current().value, tokens.next().value) {
+		(TokenValue::Identifier(_), TokenValue::Equals) => evaluate_assignment(tokens, env),
+		_ => evaluate_additive(tokens, env),
 	}
-
-	result
 }
 
-fn evaluate_assignment(
-	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	env: &mut Environment,
-) -> Result<f32, Error> {
-	consume(tokens, TokenValue::Let)?;
-	if let Some(token) = tokens.next() {
-		match token.value {
-			TokenValue::Identifier(id) => {
-				consume(tokens, TokenValue::Equals)?;
-				let value = evaluate_statement(tokens, env)?;
-				return Ok(env.assign(id, value));
-			}
-			_ => return unexpected_token(token),
+fn evaluate_assignment(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
+	let token = tokens.consume();
+	match token.value {
+		TokenValue::Identifier(id) => {
+			tokens.expect(TokenValue::Equals)?;
+			let value = evaluate_statement(tokens, env)?;
+			Ok(env.assign(id, value))
 		}
+		TokenValue::Eof => unexpected_end_of_input(2),
+		_ => unexpected_token(token),
 	}
-
-	unexpected_end_of_input()
 }
 
-fn evaluate_additive(
-	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	env: &mut Environment,
-) -> Result<f32, Error> {
+fn evaluate_additive(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_multiplicative(tokens, env)?;
 
-	while let Some(Token {
-		value: TokenValue::AddOperator(op),
-		src: _,
-		start: _,
-		end: _,
-	}) = tokens.peek()
-	{
-		match op {
-			AddOperator::Add => {
-				consume(tokens, TokenValue::AddOperator(AddOperator::Add))?;
+	while tokens.current().is_add_op() {
+		let token = tokens.consume();
+		match token.value {
+			TokenValue::AddOperator(AddOperator::Add) => {
 				let right = evaluate_multiplicative(tokens, env)?;
 				left += right
 			}
-			AddOperator::Sub => {
-				consume(tokens, TokenValue::AddOperator(AddOperator::Sub))?;
+			TokenValue::AddOperator(AddOperator::Sub) => {
 				let right = evaluate_multiplicative(tokens, env)?;
 				left -= right
 			}
+			_ => return Err(Error::Fatal("Fatal Error!".to_owned())),
 		}
 	}
 
 	Ok(left)
 }
 
-fn evaluate_multiplicative(
-	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	env: &mut Environment,
-) -> Result<f32, Error> {
+fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_atomic(tokens, env)?;
 
-	while let Some(Token {
-		value: TokenValue::MulOperator(op),
-		src: _,
-		start: _,
-		end: _,
-	}) = tokens.peek()
-	{
-		match op {
-			MulOperator::Mul => {
-				consume(tokens, TokenValue::MulOperator(MulOperator::Mul))?;
+	while tokens.current().is_mul_op() {
+		let token = tokens.consume();
+		match token.value {
+			TokenValue::MulOperator(MulOperator::Mul) => {
 				let right = evaluate_atomic(tokens, env)?;
 				left *= right
 			}
-			MulOperator::Div => {
-				consume(tokens, TokenValue::MulOperator(MulOperator::Div))?;
+			TokenValue::MulOperator(MulOperator::Div) => {
 				let right = evaluate_atomic(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Fatal("Division by 0!".to_owned()));
 				}
 				left /= right
 			}
-			MulOperator::Mod => {
-				consume(tokens, TokenValue::MulOperator(MulOperator::Mod))?;
+			TokenValue::MulOperator(MulOperator::Mod) => {
 				let right = evaluate_atomic(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Fatal("Division by 0!".to_owned()));
 				}
 				left %= right
 			}
+			_ => return Err(Error::Fatal("Fatal Error!".to_owned())),
 		}
 	}
 
 	Ok(left)
 }
 
-fn evaluate_atomic(
-	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	env: &mut Environment,
-) -> Result<f32, Error> {
-	if let Some(token) = tokens.next() {
-		match token.value {
-			TokenValue::Number(val) => Ok(val),
-			TokenValue::Identifier(id) => match env.get(id.to_owned()) {
-				Some(var) => match var {
-					Variable::Var(var) => Ok(*var),
-					Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
-				},
-				_ => Err(Error::VariableNotFound(id, token.start, token.end)),
+fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
+	let token = tokens.consume();
+	match token.value {
+		TokenValue::Number(val) => Ok(val),
+		TokenValue::Identifier(id) => match env.get(id.to_owned()) {
+			Some(var) => match var {
+				Variable::Var(var) => Ok(*var),
+				Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
 			},
-			TokenValue::LastResult => match env.get_last_result() {
-				Some(var) => Ok(var),
-				_ => Err(Error::VariableNotFound(token.src, token.start, token.end)),
-			},
-			TokenValue::AddOperator(op) => match op {
-				AddOperator::Add => evaluate_atomic(tokens, env),
-				AddOperator::Sub => Ok(-(evaluate_atomic(tokens, env)?)),
-			},
-			TokenValue::OpenBracket => {
-				let value = evaluate_additive(tokens, env);
-				consume(tokens, TokenValue::CloseBracket)?;
-				value
-			}
-			TokenValue::Eof => unexpected_end_of_input(),
-			_ => unexpected_token(token),
+			_ => Err(Error::VariableNotFound(id, token.start, token.end)),
+		},
+		TokenValue::LastResult => match env.get_last_result() {
+			Some(var) => Ok(var),
+			_ => Err(Error::VariableNotFound(token.src, token.start, token.end)),
+		},
+		TokenValue::AddOperator(op) => match op {
+			AddOperator::Add => evaluate_atomic(tokens, env),
+			AddOperator::Sub => Ok(-(evaluate_atomic(tokens, env)?)),
+		},
+		TokenValue::OpenBracket => {
+			let value = evaluate_additive(tokens, env);
+			tokens.expect(TokenValue::CloseBracket)?;
+			value
 		}
-	} else {
-		unexpected_end_of_input()
-	}
-}
-
-fn consume(
-	tokens: &mut Peekable<impl Iterator<Item = Token>>,
-	value: TokenValue,
-) -> Result<Token, Error> {
-	if let Some(token) = tokens.next() {
-		if token.value == value {
-			Ok(token)
-		} else {
-			Err(Error::UnexpectedToken(token.src, token.start, token.end))
-		}
-	} else {
-		Err(Error::Fatal("Unexpected end of input!".to_owned()))
+		TokenValue::Eof => unexpected_end_of_input(3),
+		_ => unexpected_token(token),
 	}
 }
 
@@ -182,8 +122,8 @@ fn unexpected_token(token: Token) -> Result<f32, Error> {
 	Err(Error::UnexpectedToken(token.src, token.start, token.end))
 }
 
-fn unexpected_end_of_input() -> Result<f32, Error> {
-	Err(Error::Fatal("Unexpected end of input!".to_owned()))
+fn unexpected_end_of_input(id: i32) -> Result<f32, Error> {
+	Err(Error::Fatal(format!("Unexpected end of input! {}", id)))
 }
 
 #[cfg(test)]
@@ -199,9 +139,10 @@ mod tests {
 	fn test_01_evaluate_atomic_simple() {
 		assert_eq!(
 			evaluate_atomic(
-				&mut vec![new_t(TokenValue::Number(45.56)), new_t(TokenValue::Eof),]
-					.into_iter()
-					.peekable(),
+				&mut Cursor::new(vec![
+					new_t(TokenValue::Number(45.56)),
+					new_t(TokenValue::Eof),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -210,13 +151,11 @@ mod tests {
 
 		assert_eq!(
 			evaluate_atomic(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::Number(45.56)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -225,14 +164,12 @@ mod tests {
 
 		assert_eq!(
 			evaluate_atomic(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::Number(45.56)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -241,14 +178,12 @@ mod tests {
 
 		assert_eq!(
 			evaluate_atomic(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::Number(45.56)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -260,14 +195,12 @@ mod tests {
 	fn test_02_evaluate_mul() {
 		assert_eq!(
 			evaluate_multiplicative(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Mul)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -276,14 +209,12 @@ mod tests {
 
 		assert_eq!(
 			evaluate_multiplicative(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(12.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Div)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -292,14 +223,12 @@ mod tests {
 
 		assert_eq!(
 			evaluate_multiplicative(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(12.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Mod)),
 					new_t(TokenValue::Number(7.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -308,15 +237,13 @@ mod tests {
 
 		assert_eq!(
 			evaluate_multiplicative(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Mul)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -328,14 +255,12 @@ mod tests {
 	fn test_03_evaluate_add() {
 		assert_eq!(
 			evaluate_additive(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -344,14 +269,12 @@ mod tests {
 
 		assert_eq!(
 			evaluate_additive(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -360,15 +283,13 @@ mod tests {
 
 		assert_eq!(
 			evaluate_additive(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -380,16 +301,14 @@ mod tests {
 	fn test_04_evaluate_operation_order() {
 		assert_eq!(
 			evaluate(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Mul)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -398,16 +317,14 @@ mod tests {
 
 		assert_eq!(
 			evaluate(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Mul)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -416,7 +333,7 @@ mod tests {
 
 		assert_eq!(
 			evaluate(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Mul)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
@@ -424,9 +341,7 @@ mod tests {
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut Environment::new()
 			)
 			.unwrap(),
@@ -437,7 +352,7 @@ mod tests {
 	#[test]
 	fn test_05_blank_input() {
 		match evaluate(
-			&mut vec![new_t(TokenValue::Eof)].into_iter().peekable(),
+			&mut Cursor::new(vec![new_t(TokenValue::Eof)]),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -448,12 +363,10 @@ mod tests {
 	#[test]
 	fn test_06_only_operator() {
 		match evaluate(
-			&mut vec![
+			&mut Cursor::new(vec![
 				new_t(TokenValue::AddOperator(AddOperator::Add)),
 				new_t(TokenValue::Eof),
-			]
-			.into_iter()
-			.peekable(),
+			]),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -464,13 +377,11 @@ mod tests {
 	#[test]
 	fn test_07_only_numbers() {
 		match evaluate(
-			&mut vec![
+			&mut Cursor::new(vec![
 				new_t(TokenValue::Number(4.0)),
 				new_t(TokenValue::Number(5.0)),
 				new_t(TokenValue::Eof),
-			]
-			.into_iter()
-			.peekable(),
+			]),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -481,14 +392,12 @@ mod tests {
 	#[test]
 	fn test_08_wrong_bracket() {
 		match evaluate(
-			&mut vec![
+			&mut Cursor::new(vec![
 				new_t(TokenValue::OpenBracket),
 				new_t(TokenValue::Number(5.0)),
 				new_t(TokenValue::OpenBracket),
 				new_t(TokenValue::Eof),
-			]
-			.into_iter()
-			.peekable(),
+			]),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -499,14 +408,12 @@ mod tests {
 	#[test]
 	fn test_09_division_by_0() {
 		match evaluate(
-			&mut vec![
+			&mut Cursor::new(vec![
 				new_t(TokenValue::Number(4.0)),
 				new_t(TokenValue::MulOperator(MulOperator::Div)),
 				new_t(TokenValue::Number(0.0)),
 				new_t(TokenValue::Eof),
-			]
-			.into_iter()
-			.peekable(),
+			]),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -521,15 +428,12 @@ mod tests {
 		// assign
 		assert_eq!(
 			evaluate(
-				&mut vec![
-					new_t(TokenValue::Let),
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Identifier("a".to_owned())),
 					new_t(TokenValue::Equals),
 					new_t(TokenValue::Number(34.5)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut env,
 			)
 			.unwrap(),
@@ -539,14 +443,12 @@ mod tests {
 		// get
 		assert_eq!(
 			evaluate(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Identifier("a".to_owned())),
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(2.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut env,
 			)
 			.unwrap(),
@@ -556,15 +458,12 @@ mod tests {
 		// reassign
 		assert_eq!(
 			evaluate(
-				&mut vec![
-					new_t(TokenValue::Let),
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Identifier("a".to_owned())),
 					new_t(TokenValue::Equals),
 					new_t(TokenValue::Number(5.4)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut env,
 			)
 			.unwrap(),
@@ -574,14 +473,12 @@ mod tests {
 		// get
 		assert_eq!(
 			evaluate(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Identifier("a".to_owned())),
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(2.0)),
 					new_t(TokenValue::Eof)
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut env,
 			)
 			.unwrap(),
@@ -592,16 +489,14 @@ mod tests {
 	#[test]
 	fn test_11_get_undefined_variable() {
 		match evaluate(
-			&mut vec![
+			&mut Cursor::new(vec![
 				new_t(TokenValue::Identifier("xyz".to_owned())),
 				new_t(TokenValue::Eof),
-			]
-			.into_iter()
-			.peekable(),
+			]),
 			&mut Environment::new(),
 		) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 	}
 
@@ -611,13 +506,11 @@ mod tests {
 		env.init();
 		assert_eq!(
 			evaluate(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Identifier("sqrt".to_owned())),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof)
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut env,
 			)
 			.unwrap(),
@@ -626,15 +519,13 @@ mod tests {
 
 		assert_eq!(
 			evaluate(
-				&mut vec![
+				&mut Cursor::new(vec![
 					new_t(TokenValue::Identifier("sqrt".to_owned())),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof),
-				]
-				.into_iter()
-				.peekable(),
+				]),
 				&mut env,
 			)
 			.unwrap(),
@@ -649,9 +540,7 @@ mod tests {
 
 		// not assigned yet
 		match evaluate(
-			&mut vec![new_t(TokenValue::LastResult), new_t(TokenValue::Eof)]
-				.into_iter()
-				.peekable(),
+			&mut Cursor::new(vec![new_t(TokenValue::LastResult), new_t(TokenValue::Eof)]),
 			&mut Environment::new(),
 		) {
 			Err(_) => assert!(true),
@@ -661,9 +550,7 @@ mod tests {
 		// assign last result
 		assert_eq!(
 			evaluate(
-				&mut vec![new_t(TokenValue::Number(4.0)), new_t(TokenValue::Eof),]
-					.into_iter()
-					.peekable(),
+				&mut Cursor::new(vec![new_t(TokenValue::Number(4.0)), new_t(TokenValue::Eof),]),
 				&mut env,
 			)
 			.unwrap(),
@@ -673,9 +560,7 @@ mod tests {
 		// use last result
 		assert_eq!(
 			evaluate(
-				&mut vec![new_t(TokenValue::LastResult), new_t(TokenValue::Eof),]
-					.into_iter()
-					.peekable(),
+				&mut Cursor::new(vec![new_t(TokenValue::LastResult), new_t(TokenValue::Eof),]),
 				&mut env,
 			)
 			.unwrap(),

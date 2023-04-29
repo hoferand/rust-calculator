@@ -94,7 +94,7 @@ You can apply signs multiple times like `--4` which evaluates to `4`.
 It is also possible to use variables to store results and reuse it in other calculations.  
 The variable names may only consist of letters `a-zA-Z` and numbers `0-9`, but cannot start with a number.
 ```
-> let a = 5 * 6
+> a = 5 * 6
 = 30
 
 > a / 4

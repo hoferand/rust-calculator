@@ -2,13 +2,15 @@ pub mod error;
 use error::Error;
 pub mod environment;
 use environment::Environment;
+mod cursor;
+use cursor::Cursor;
 mod lexer;
 mod parser;
 mod token;
 
 pub fn calculate(input: &str, env: &mut Environment) -> Result<f32, Error> {
-	let tokens = lexer::tokenize(input)?;
-	parser::evaluate(&mut tokens.peekable(), env)
+	let mut tokens = Cursor::new(lexer::tokenize(input)?);
+	parser::evaluate(&mut tokens, env)
 }
 
 #[cfg(test)]
@@ -126,7 +128,7 @@ mod tests {
 	#[test]
 	fn test_07_variables() {
 		let mut env = Environment::new();
-		assert_eq!(calculate("let a = 5", &mut env).unwrap(), 5.0);
+		assert_eq!(calculate("a = 5", &mut env).unwrap(), 5.0);
 		assert_eq!(calculate("a * 10", &mut env).unwrap(), 50.0);
 	}
 
@@ -143,8 +145,8 @@ mod tests {
 		let mut env = Environment::new();
 		env.init();
 		match calculate("$", &mut env) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 		assert_eq!(calculate("4 + 5", &mut env).unwrap(), 9.0);
 		assert_eq!(calculate("$ + 3", &mut env).unwrap(), 12.0);
