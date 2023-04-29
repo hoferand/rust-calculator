@@ -25,6 +25,7 @@ impl Token {
 	pub fn is_mul_op(&self) -> bool {
 		matches!(self.value, TokenValue::MulOperator(_))
 	}
+
 	pub fn unexpected(&self) -> Error {
 		match self.value {
 			TokenValue::Eof => Error::Fatal("Unexpected end of input!".to_owned()),
