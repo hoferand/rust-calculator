@@ -40,8 +40,7 @@ impl Cursor {
 		let token = self.consume();
 		match &token.value {
 			value if *value == expected => Ok(token),
-			TokenValue::Eof => Err(Error::Fatal("Unexpected end of input!".to_owned())),
-			_ => Err(Error::UnexpectedToken(token.src, token.start, token.end)),
+			_ => Err(token.unexpected()),
 		}
 	}
 }

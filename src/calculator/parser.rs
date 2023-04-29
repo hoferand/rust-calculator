@@ -1,7 +1,7 @@
 use crate::calculator::cursor::Cursor;
 use crate::calculator::environment::{Environment, Variable};
 use crate::calculator::error::Error;
-use crate::calculator::token::{AddOperator, MulOperator, Token, TokenValue};
+use crate::calculator::token::{AddOperator, MulOperator, TokenValue};
 
 pub fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let result = evaluate_statement(tokens, env);
@@ -32,8 +32,7 @@ fn evaluate_assignment(tokens: &mut Cursor, env: &mut Environment) -> Result<f32
 			let value = evaluate_statement(tokens, env)?;
 			Ok(env.assign(id, value))
 		}
-		TokenValue::Eof => unexpected_end_of_input(),
-		_ => unexpected_token(token),
+		_ => Err(token.unexpected()),
 	}
 }
 
@@ -113,22 +112,14 @@ fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Er
 			tokens.expect(TokenValue::CloseBracket)?;
 			value
 		}
-		TokenValue::Eof => unexpected_end_of_input(),
-		_ => unexpected_token(token),
+		_ => Err(token.unexpected()),
 	}
-}
-
-fn unexpected_token(token: Token) -> Result<f32, Error> {
-	Err(Error::UnexpectedToken(token.src, token.start, token.end))
-}
-
-fn unexpected_end_of_input() -> Result<f32, Error> {
-	Err(Error::Fatal("Unexpected end of input!".to_owned()))
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::calculator::token::Token;
 
 	// only needed for testing
 	fn new_t(value: TokenValue) -> Token {
