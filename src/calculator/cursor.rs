@@ -36,10 +36,10 @@ impl Cursor {
 		Token::new(TokenValue::Eof, "EOF".to_owned(), 0, 0)
 	}
 
-	pub fn expect(&mut self, value: TokenValue) -> Result<Token, Error> {
+	pub fn expect(&mut self, expected: TokenValue) -> Result<Token, Error> {
 		let token = self.consume();
 		match &token.value {
-			t_value if value == *t_value => Ok(token),
+			value if *value == expected => Ok(token),
 			TokenValue::Eof => Err(Error::Fatal("Unexpected end of input!".to_owned())),
 			_ => Err(Error::UnexpectedToken(token.src, token.start, token.end)),
 		}
