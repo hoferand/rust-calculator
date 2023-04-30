@@ -73,6 +73,8 @@ You can use integer `45` as well as floating point values `45.43`.
  - Multiplication: `*`
  - Division: `/`
  - Modulo: `%`
+ - Power: `**`
+ - Root: `//`
 
 
 ### Brackets
@@ -128,24 +130,23 @@ Error: Variable `$` not found!
 ### Functions
 
 Functions can not be defined by yourself but there are some predefined:
- - Square root: `sqrt`
  - Sinus: `sin`
  - Arcus-Sinus: `asin`
  - Cosinus: `cos`
  - Arcus-Cosinus: `acos`
  - Tangens: `tan`
  - Arcus-Tangens: `atan`
- - Radiant to Degrees: `r2d`
- - Degrees to Radiant: `d2r`
+ - Radiants to Degrees: `r2d`
+ - Degrees to Radiants: `d2r`
 
 **All trigonometric functions uses radiants.**
 
 ```
-> sqrt 4
-= 2
+> r2d pi
+= 180
 
-> sqrt 100 + 2
-= 12
+> r2d pi + 2
+= 182
 ```
 
 
@@ -155,11 +156,11 @@ Functions can not be defined by yourself but there are some predefined:
  1. Numbers / Variables: `3`, `4.5`, `var`, etc
  2. Brackets: `( ... )`
  3. Signs: `+`, `-`
- 4. Function calls: `sqrt`, `sin`, etc
+ 4. Function calls: `r2d`, `sin`, etc
  5. Multiplicative Operators: `*`, `/`, `%`
  6. Additions Operators: `+`, `-`
 
-So `5 + -4 * 5 + sqrt 100 + 12` is evaluated as `5 + ((-4) * 5) + (sqrt 100) + 12`.
+So `5 + -4 * 5 + r2d pi + 12` is evaluated as `5 + ((-4) * 5) + (r2d pi) + 12`.
 
 
 

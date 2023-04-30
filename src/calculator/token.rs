@@ -26,6 +26,10 @@ impl Token {
 		matches!(self.value, TokenValue::MulOperator(_))
 	}
 
+	pub fn is_exp_op(&self) -> bool {
+		matches!(self.value, TokenValue::ExpOperator(_))
+	}
+
 	pub fn unexpected(&self) -> Error {
 		match self.value {
 			TokenValue::Eof => Error::Fatal("Unexpected end of input!".to_owned()),
@@ -39,6 +43,7 @@ pub enum TokenValue {
 	Number(f32),
 	AddOperator(AddOperator),
 	MulOperator(MulOperator),
+	ExpOperator(ExpOperator),
 	OpenBracket,
 	CloseBracket,
 	Identifier(String),
@@ -59,4 +64,10 @@ pub enum MulOperator {
 	Mul,
 	Div,
 	Mod,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum ExpOperator {
+	Power,
+	Root,
 }

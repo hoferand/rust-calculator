@@ -58,28 +58,52 @@ fn evaluate_additive(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, 
 }
 
 fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
-	let mut left = evaluate_atomic(tokens, env)?;
+	let mut left = evaluate_exponential(tokens, env)?;
 
 	while tokens.current().is_mul_op() {
 		let token = tokens.consume();
 		match token.value {
 			TokenValue::MulOperator(MulOperator::Mul) => {
-				let right = evaluate_atomic(tokens, env)?;
+				let right = evaluate_exponential(tokens, env)?;
 				left *= right
 			}
 			TokenValue::MulOperator(MulOperator::Div) => {
-				let right = evaluate_atomic(tokens, env)?;
+				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Fatal("Division by 0!".to_owned()));
 				}
 				left /= right
 			}
 			TokenValue::MulOperator(MulOperator::Mod) => {
-				let right = evaluate_atomic(tokens, env)?;
+				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Fatal("Division by 0!".to_owned()));
 				}
 				left %= right
+			}
+			_ => return Err(Error::Fatal("Fatal Error!".to_owned())),
+		}
+	}
+
+	Ok(left)
+}
+
+fn evaluate_exponential(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
+	let mut left = evaluate_atomic(tokens, env)?;
+
+	while tokens.current().is_exp_op() {
+		let token = tokens.consume();
+		match token.value {
+			TokenValue::ExpOperator(super::token::ExpOperator::Power) => {
+				let right = evaluate_atomic(tokens, env)?;
+				left = left.powf(right)
+			}
+			TokenValue::ExpOperator(super::token::ExpOperator::Root) => {
+				let right = evaluate_atomic(tokens, env)?;
+				if right == 0.0 {
+					return Err(Error::Fatal("Division by 0!".to_owned()));
+				}
+				left = left.powf(1.0 / right)
 			}
 			_ => return Err(Error::Fatal("Fatal Error!".to_owned())),
 		}
@@ -338,6 +362,24 @@ mod tests {
 			.unwrap(),
 			-8.0
 		);
+
+		assert_eq!(
+			evaluate(
+				&mut Cursor::new(vec![
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::MulOperator(MulOperator::Mul)),
+					new_t(TokenValue::Number(4.0)),
+					new_t(TokenValue::ExpOperator(
+						crate::calculator::token::ExpOperator::Power
+					)),
+					new_t(TokenValue::Number(2.0)),
+					new_t(TokenValue::Eof),
+				]),
+				&mut Environment::new()
+			)
+			.unwrap(),
+			48.0
+		);
 	}
 
 	#[test]
@@ -346,8 +388,8 @@ mod tests {
 			&mut Cursor::new(vec![new_t(TokenValue::Eof)]),
 			&mut Environment::new(),
 		) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 	}
 
@@ -360,8 +402,8 @@ mod tests {
 			]),
 			&mut Environment::new(),
 		) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 	}
 
@@ -375,8 +417,8 @@ mod tests {
 			]),
 			&mut Environment::new(),
 		) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 	}
 
@@ -391,8 +433,8 @@ mod tests {
 			]),
 			&mut Environment::new(),
 		) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 	}
 
@@ -407,8 +449,8 @@ mod tests {
 			]),
 			&mut Environment::new(),
 		) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 	}
 
@@ -498,7 +540,7 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut Cursor::new(vec![
-					new_t(TokenValue::Identifier("sqrt".to_owned())),
+					new_t(TokenValue::Identifier("test".to_owned())),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::Eof)
 				]),
@@ -511,7 +553,7 @@ mod tests {
 		assert_eq!(
 			evaluate(
 				&mut Cursor::new(vec![
-					new_t(TokenValue::Identifier("sqrt".to_owned())),
+					new_t(TokenValue::Identifier("test".to_owned())),
 					new_t(TokenValue::Number(4.0)),
 					new_t(TokenValue::AddOperator(AddOperator::Add)),
 					new_t(TokenValue::Number(4.0)),
@@ -534,8 +576,8 @@ mod tests {
 			&mut Cursor::new(vec![new_t(TokenValue::LastResult), new_t(TokenValue::Eof)]),
 			&mut Environment::new(),
 		) {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 
 		// assign last result
@@ -556,6 +598,58 @@ mod tests {
 			)
 			.unwrap(),
 			4.0
+		);
+	}
+
+	#[test]
+	fn test_14_evaluate_exp() {
+		assert_eq!(
+			evaluate_exponential(
+				&mut Cursor::new(vec![
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::ExpOperator(
+						crate::calculator::token::ExpOperator::Power
+					)),
+					new_t(TokenValue::Number(2.0)),
+					new_t(TokenValue::Eof),
+				]),
+				&mut Environment::new()
+			)
+			.unwrap(),
+			9.0
+		);
+
+		assert_eq!(
+			evaluate_exponential(
+				&mut Cursor::new(vec![
+					new_t(TokenValue::Number(8.0)),
+					new_t(TokenValue::ExpOperator(
+						crate::calculator::token::ExpOperator::Root
+					)),
+					new_t(TokenValue::Number(3.0)),
+					new_t(TokenValue::Eof),
+				]),
+				&mut Environment::new()
+			)
+			.unwrap(),
+			2.0
+		);
+
+		assert_eq!(
+			evaluate_exponential(
+				&mut Cursor::new(vec![
+					new_t(TokenValue::Number(2.0)),
+					new_t(TokenValue::ExpOperator(
+						crate::calculator::token::ExpOperator::Power
+					)),
+					new_t(TokenValue::AddOperator(AddOperator::Sub)),
+					new_t(TokenValue::Number(1.0)),
+					new_t(TokenValue::Eof),
+				]),
+				&mut Environment::new()
+			)
+			.unwrap(),
+			0.5
 		);
 	}
 }

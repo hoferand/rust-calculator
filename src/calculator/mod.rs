@@ -136,8 +136,8 @@ mod tests {
 	fn test_08_function_calls() {
 		let mut env = Environment::new();
 		env.init();
-		assert_eq!(calculate("sqrt 16", &mut env).unwrap(), 4.0);
-		assert_eq!(calculate("sqrt 16 * 5", &mut env).unwrap(), 20.0);
+		assert_eq!(calculate("test 16", &mut env).unwrap(), 8.0);
+		assert_eq!(calculate("test 16 * 5", &mut env).unwrap(), 40.0);
 	}
 
 	#[test]

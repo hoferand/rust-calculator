@@ -1,5 +1,5 @@
 use crate::calculator::error::Error;
-use crate::calculator::token::{AddOperator, MulOperator, Token, TokenValue};
+use crate::calculator::token::{AddOperator, ExpOperator, MulOperator, Token, TokenValue};
 
 pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
@@ -32,18 +32,42 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 				start,
 				start,
 			)),
-			'*' => tokens.push(Token::new(
-				TokenValue::MulOperator(MulOperator::Mul),
-				char.to_string(),
-				start,
-				start,
-			)),
-			'/' => tokens.push(Token::new(
-				TokenValue::MulOperator(MulOperator::Div),
-				char.to_string(),
-				start,
-				start,
-			)),
+			'*' => match chars.peek() {
+				Some('*') => {
+					chars.next();
+					tokens.push(Token::new(
+						TokenValue::ExpOperator(ExpOperator::Power),
+						"**".to_owned(),
+						start,
+						start + 1,
+					));
+					start += 1;
+				}
+				_ => tokens.push(Token::new(
+					TokenValue::MulOperator(MulOperator::Mul),
+					char.to_string(),
+					start,
+					start,
+				)),
+			},
+			'/' => match chars.peek() {
+				Some('/') => {
+					chars.next();
+					tokens.push(Token::new(
+						TokenValue::ExpOperator(ExpOperator::Root),
+						"//".to_owned(),
+						start,
+						start + 1,
+					));
+					start += 1;
+				}
+				_ => tokens.push(Token::new(
+					TokenValue::MulOperator(MulOperator::Div),
+					char.to_string(),
+					start,
+					start,
+				)),
+			},
 			'%' => tokens.push(Token::new(
 				TokenValue::MulOperator(MulOperator::Mod),
 				char.to_string(),
@@ -260,8 +284,8 @@ mod tests {
 	#[test]
 	fn test_08_invalid_character() {
 		match tokenize("<") {
-			Err(_) => assert!(true),
-			_ => assert!(false),
+			Err(_) => (),
+			_ => panic!(),
 		}
 	}
 
@@ -274,6 +298,28 @@ mod tests {
 				Token::new(TokenValue::LastResult, "$".to_owned(), 1, 1),
 				Token::new(TokenValue::Number(4.0), "4".to_owned(), 2, 2),
 				Token::new(TokenValue::Eof, "EOF".to_owned(), 3, 3)
+			]
+		);
+	}
+
+	#[test]
+	fn test_10_exp_operator_literal() {
+		assert_eq!(
+			tokenize("**//").unwrap(),
+			vec![
+				Token::new(
+					TokenValue::ExpOperator(ExpOperator::Power),
+					"**".to_owned(),
+					0,
+					1
+				),
+				Token::new(
+					TokenValue::ExpOperator(ExpOperator::Root),
+					"//".to_owned(),
+					2,
+					3
+				),
+				Token::new(TokenValue::Eof, "EOF".to_owned(), 4, 4)
 			]
 		);
 	}

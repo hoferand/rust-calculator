@@ -43,8 +43,6 @@ impl Environment {
 		self.variables.insert("e".to_owned(), Variable::Var(E));
 
 		self.variables
-			.insert("sqrt".to_owned(), Variable::Fn(|x| x.sqrt().round()));
-		self.variables
 			.insert("sin".to_owned(), Variable::Fn(|x| x.sin()));
 		self.variables
 			.insert("asin".to_owned(), Variable::Fn(|x| x.asin()));
@@ -60,6 +58,10 @@ impl Environment {
 			.insert("r2d".to_owned(), Variable::Fn(|x| (x * 180.0) / PI));
 		self.variables
 			.insert("d2r".to_owned(), Variable::Fn(|x| (x * PI) / 180.0));
+
+		#[cfg(test)]
+		self.variables
+			.insert("test".to_owned(), Variable::Fn(|x| x / 2.0));
 	}
 }
 
@@ -74,9 +76,9 @@ mod tests {
 		match env.get("var1".to_owned()) {
 			Some(val) => match val {
 				Variable::Var(val) => assert_eq!(*val, 34.5),
-				_ => assert!(false),
+				_ => panic!(),
 			},
-			_ => assert!(false),
+			_ => panic!(),
 		}
 	}
 
@@ -84,8 +86,8 @@ mod tests {
 	fn test_02_get_undefined() {
 		let mut env = Environment::new();
 		match env.get("xyz".to_owned()) {
-			None => assert!(true),
-			_ => assert!(false),
+			None => (),
+			_ => panic!(),
 		}
 	}
 
@@ -96,17 +98,17 @@ mod tests {
 		match env.get("pi".to_owned()) {
 			Some(val) => match val {
 				Variable::Var(val) => assert_eq!(*val, PI),
-				_ => assert!(false),
+				_ => panic!(),
 			},
-			_ => assert!(false),
+			_ => panic!(),
 		}
 
-		match env.get("sqrt".to_owned()) {
+		match env.get("test".to_owned()) {
 			Some(var) => match var {
 				Variable::Fn(var) => assert_eq!(var(4.0), 2.0),
-				_ => assert!(false),
+				_ => panic!(),
 			},
-			_ => assert!(false),
+			_ => panic!(),
 		}
 	}
 }
