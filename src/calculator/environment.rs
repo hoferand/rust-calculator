@@ -74,10 +74,7 @@ mod tests {
 		let mut env = Environment::new();
 		assert_eq!(env.assign("var1".to_owned(), 34.5), 34.5);
 		match env.get("var1".to_owned()) {
-			Some(val) => match val {
-				Variable::Var(val) => assert_eq!(*val, 34.5),
-				_ => panic!(),
-			},
+			Some(Variable::Var(val)) => assert_eq!(*val, 34.5),
 			_ => panic!(),
 		}
 	}
@@ -96,18 +93,12 @@ mod tests {
 		let mut env = Environment::new();
 		env.init();
 		match env.get("pi".to_owned()) {
-			Some(val) => match val {
-				Variable::Var(val) => assert_eq!(*val, PI),
-				_ => panic!(),
-			},
+			Some(Variable::Var(val)) => assert_eq!(*val, PI),
 			_ => panic!(),
 		}
 
 		match env.get("test".to_owned()) {
-			Some(var) => match var {
-				Variable::Fn(var) => assert_eq!(var(4.0), 2.0),
-				_ => panic!(),
-			},
+			Some(Variable::Fn(var)) => assert_eq!(var(4.0), 2.0),
 			_ => panic!(),
 		}
 	}
