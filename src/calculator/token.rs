@@ -1,4 +1,4 @@
-use crate::calculator::error::Error;
+use super::Error;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Token {

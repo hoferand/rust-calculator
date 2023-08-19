@@ -1,12 +1,13 @@
 pub mod error;
-use error::Error;
+pub use error::*;
 pub mod environment;
-use environment::Environment;
+pub use environment::*;
 mod cursor;
-use cursor::Cursor;
+use cursor::*;
 mod lexer;
 mod parser;
 mod token;
+use token::*;
 
 pub fn calculate(input: &str, env: &mut Environment) -> Result<f32, Error> {
 	let mut tokens = Cursor::new(lexer::tokenize(input)?);

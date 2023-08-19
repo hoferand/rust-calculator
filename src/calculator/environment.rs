@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::f32;
 use std::f32::consts::{E, PI};
 
 pub enum Variable {

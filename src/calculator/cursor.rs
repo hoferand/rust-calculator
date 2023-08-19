@@ -1,5 +1,4 @@
-use crate::calculator::error::Error;
-use crate::calculator::token::{Token, TokenValue};
+use super::{Error, Token, TokenValue};
 
 pub struct Cursor {
 	tokens: Vec<Token>,

@@ -1,7 +1,4 @@
-use crate::calculator::cursor::Cursor;
-use crate::calculator::environment::{Environment, Variable};
-use crate::calculator::error::Error;
-use crate::calculator::token::{AddOperator, MulOperator, TokenValue};
+use super::{AddOperator, Cursor, Environment, Error, MulOperator, TokenValue, Variable};
 
 pub fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let result = evaluate_statement(tokens, env);

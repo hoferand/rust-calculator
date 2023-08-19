@@ -1,7 +1,9 @@
 use std::io::{self, stdout, BufRead, Write};
-mod calculator;
-use calculator::{environment::Environment, error::Error};
+
 use colored::Colorize;
+
+mod calculator;
+use calculator::{Environment, Error};
 
 fn main() {
 	println!("Simple calculator in Rust");

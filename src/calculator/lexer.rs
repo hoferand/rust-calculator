@@ -1,5 +1,4 @@
-use crate::calculator::error::Error;
-use crate::calculator::token::{AddOperator, ExpOperator, MulOperator, Token, TokenValue};
+use super::{AddOperator, Error, ExpOperator, MulOperator, Token, TokenValue};
 
 pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
