@@ -1,6 +1,6 @@
 <!-- PROJECT NAME -->
 # Calculator
-A simple command line calculator built with Rust.
+A simple Rust library for evaluating mathematical expressions.
 
 
 
@@ -17,10 +17,9 @@ A simple command line calculator built with Rust.
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-A simple calculator using a lexer and parser for evaluating mathematical expressions.  
-After the expression is read from the command line it gets split into single tokens (`Number`, `Operator`, `Bracket`, etc).  
-These tokens are now used by the parser to calculate the result.
-
+A simple calculator library using a lexer and parser for evaluating mathematical expressions.  
+First the input gets split into single tokens e.g.: `4.5 + 5` => [`4.5`, `+`, `5`]  
+These tokens are now used by the parser to calculate the result e.g.: [`4.5`, `+`, `5`] => `9.5`
 
 
 
