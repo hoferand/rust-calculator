@@ -1,7 +1,7 @@
 use super::Error;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Token {
+pub(crate) struct Token {
 	pub value: TokenValue,
 	pub src: String,
 	pub start: usize,
@@ -9,7 +9,7 @@ pub struct Token {
 }
 
 impl Token {
-	pub fn new(value: TokenValue, src: String, start: usize, end: usize) -> Token {
+	pub(crate) fn new(value: TokenValue, src: String, start: usize, end: usize) -> Token {
 		Token {
 			value,
 			src,
@@ -18,19 +18,19 @@ impl Token {
 		}
 	}
 
-	pub fn is_add_op(&self) -> bool {
+	pub(crate) fn is_add_op(&self) -> bool {
 		matches!(self.value, TokenValue::AddOperator(_))
 	}
 
-	pub fn is_mul_op(&self) -> bool {
+	pub(crate) fn is_mul_op(&self) -> bool {
 		matches!(self.value, TokenValue::MulOperator(_))
 	}
 
-	pub fn is_exp_op(&self) -> bool {
+	pub(crate) fn is_exp_op(&self) -> bool {
 		matches!(self.value, TokenValue::ExpOperator(_))
 	}
 
-	pub fn unexpected(&self) -> Error {
+	pub(crate) fn unexpected(&self) -> Error {
 		match self.value {
 			TokenValue::Eof => Error::Fatal("Unexpected end of input!".to_owned()),
 			_ => Error::UnexpectedToken(self.src.clone(), self.start, self.end),
@@ -39,7 +39,7 @@ impl Token {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum TokenValue {
+pub(crate) enum TokenValue {
 	Number(f32),
 	AddOperator(AddOperator),
 	MulOperator(MulOperator),
@@ -54,20 +54,20 @@ pub enum TokenValue {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum AddOperator {
+pub(crate) enum AddOperator {
 	Add,
 	Sub,
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum MulOperator {
+pub(crate) enum MulOperator {
 	Mul,
 	Div,
 	Mod,
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum ExpOperator {
+pub(crate) enum ExpOperator {
 	Power,
 	Root,
 }

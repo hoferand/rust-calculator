@@ -1,6 +1,6 @@
 use super::{AddOperator, Cursor, Environment, Error, MulOperator, TokenValue, Variable};
 
-pub fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
+pub(crate) fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let result = evaluate_statement(tokens, env);
 
 	// check if all tokens are consumed

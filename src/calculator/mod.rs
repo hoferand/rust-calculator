@@ -8,7 +8,28 @@ mod lexer;
 mod parser;
 mod token;
 use token::*;
+mod variable;
+use variable::*;
 
+/// Evaluates a single line expression to an f32 value under the given environment.
+///
+/// # Example
+///
+/// ```
+/// fn main() {
+/// 	let expr = "3 * -(4 + 5)";
+/// 	let mut env = Environment::new();
+/// 	env.init(); // for initializing the std lib
+///
+/// 	let val = calculator::calculate(expr, env).unwrap();
+/// 	println!("{}", val);
+/// }
+/// ```
+///
+/// # Errors
+///
+/// This evaluation can fail if the structure of the input is not valid.
+/// For example if the input contains invalid characters or have bad syntax.
 pub fn calculate(input: &str, env: &mut Environment) -> Result<f32, Error> {
 	let mut tokens = Cursor::new(lexer::tokenize(input)?);
 	parser::evaluate(&mut tokens, env)

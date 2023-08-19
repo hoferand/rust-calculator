@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 use std::f32::consts::{E, PI};
 
-pub enum Variable {
-	Var(f32),
-	Fn(fn(f32) -> f32),
-}
+use super::Variable;
 
+//// TODO
 pub struct Environment {
 	variables: HashMap<String, Variable>,
 	last_result: Option<f32>,
@@ -19,20 +17,20 @@ impl Environment {
 		}
 	}
 
-	pub fn assign(&mut self, key: String, value: f32) -> f32 {
+	pub(crate) fn assign(&mut self, key: String, value: f32) -> f32 {
 		self.variables.insert(key, Variable::Var(value));
 		value
 	}
 
-	pub fn get(&mut self, key: String) -> Option<&Variable> {
+	pub(crate) fn get(&mut self, key: String) -> Option<&Variable> {
 		return self.variables.get(&key);
 	}
 
-	pub fn get_last_result(&mut self) -> Option<f32> {
+	pub(crate) fn get_last_result(&mut self) -> Option<f32> {
 		self.last_result
 	}
 
-	pub fn set_last_result(&mut self, value: f32) -> f32 {
+	pub(crate) fn set_last_result(&mut self, value: f32) -> f32 {
 		self.last_result = Some(value);
 		value
 	}

@@ -1,3 +1,4 @@
+/// This type represents all possible errors that can occur when evaluating an expression.
 #[derive(Debug)]
 pub enum Error {
 	// error message
