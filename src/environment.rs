@@ -29,8 +29,8 @@ impl Environment {
 		value
 	}
 
-	pub(crate) fn get(&self, key: String) -> Option<&Variable> {
-		return self.variables.get(&key);
+	pub(crate) fn get(&self, key: &str) -> Option<&Variable> {
+		return self.variables.get(key);
 	}
 
 	pub(crate) fn get_last_result(&self) -> Option<f32> {
@@ -78,7 +78,7 @@ mod tests {
 	fn test_01_assignment() {
 		let mut env = Environment::new();
 		assert_eq!(env.assign("var1".to_owned(), 34.5), 34.5);
-		match env.get("var1".to_owned()) {
+		match env.get("var1") {
 			Some(Variable::Var(val)) => assert_eq!(*val, 34.5),
 			_ => panic!(),
 		}
@@ -87,7 +87,7 @@ mod tests {
 	#[test]
 	fn test_02_get_undefined() {
 		let env = Environment::new();
-		match env.get("xyz".to_owned()) {
+		match env.get("xyz") {
 			None => (),
 			_ => panic!(),
 		}
@@ -97,12 +97,12 @@ mod tests {
 	fn test_03_init() {
 		let mut env = Environment::new();
 		env.init();
-		match env.get("pi".to_owned()) {
+		match env.get("pi") {
 			Some(Variable::Var(val)) => assert_eq!(*val, PI),
 			_ => panic!(),
 		}
 
-		match env.get("test".to_owned()) {
+		match env.get("test") {
 			Some(Variable::Fn(var)) => assert_eq!(var(4.0), 2.0),
 			_ => panic!(),
 		}

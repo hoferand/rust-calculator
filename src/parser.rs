@@ -7,7 +7,7 @@ pub(crate) fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32
 
 	// check if all tokens are consumed
 	if let Ok(value) = result {
-		tokens.expect(TokenValue::Eof)?;
+		tokens.expect(&TokenValue::Eof)?;
 		env.set_last_result(value);
 
 		return Ok(value);
@@ -27,7 +27,7 @@ fn evaluate_assignment(tokens: &mut Cursor, env: &mut Environment) -> Result<f32
 	let token = tokens.consume();
 	match token.value {
 		TokenValue::Identifier(id) => {
-			tokens.expect(TokenValue::Equals)?;
+			tokens.expect(&TokenValue::Equals)?;
 			let value = evaluate_statement(tokens, env)?;
 			Ok(env.assign(id, value))
 		}
@@ -109,7 +109,7 @@ fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Er
 	let token = tokens.consume();
 	match token.value {
 		TokenValue::Number(val) => Ok(val),
-		TokenValue::Identifier(id) => match env.get(id.to_owned()) {
+		TokenValue::Identifier(id) => match env.get(&id) {
 			Some(var) => match var {
 				Variable::Var(var) => Ok(*var),
 				Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
@@ -126,7 +126,7 @@ fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Er
 		},
 		TokenValue::OpenBracket => {
 			let value = evaluate_additive(tokens, env);
-			tokens.expect(TokenValue::CloseBracket)?;
+			tokens.expect(&TokenValue::CloseBracket)?;
 			value
 		}
 		_ => Err(token.unexpected()),
