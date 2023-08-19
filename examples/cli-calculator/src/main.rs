@@ -2,9 +2,9 @@ use std::io::{self, stdout, BufRead, Write};
 
 use colored::Colorize;
 
-mod calculator;
-use calculator::{Environment, Error};
+use calculator::*;
 
+/// A simple demo application for demonstrating the calculator lib.
 fn main() {
 	println!("Simple calculator in Rust");
 	print!("> ");
@@ -22,7 +22,7 @@ fn main() {
 			}
 
 			// evaluate line
-			match calculator::calculate(&input, &mut env) {
+			match calculate(&input, &mut env) {
 				Ok(result) => println!("= {}", result),
 				Err(e) => {
 					eprintln!("Error: {}", e);

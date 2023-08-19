@@ -36,7 +36,7 @@ Afterwards you can clone this repository and run it as described in [Usage](#usa
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-You can use this calculator by running `cargo run` in your shell.
+You can try this calculator by running the binary in the `examples/cli-calculator` directory.
 ```
 $ cargo run
 Simple calculator in Rust
@@ -54,8 +54,19 @@ Error: Unexpected token `(` found!
 >
 ```
 
-And building it by running `cargo build` in your shell.  
-After that you can find the executable in `target/debug/calculator`.
+Or using it in your own bianry:
+```rust
+use calculator::*;
+
+fn main() {
+  let expr = "3 * -(4 + 5)";
+  let mut env = Environment::new();
+  env.init(); // for initializing the std lib
+
+  let val = calculate(expr, &mut env).unwrap();
+  println!("{}", val); // prints `-27`
+}
+```
 
 
 
@@ -95,36 +106,13 @@ You can apply signs multiple times like `--4` which evaluates to `4`.
 
 It is also possible to use variables to store results and reuse it in other calculations.  
 The variable names may only consist of letters `a-zA-Z` and numbers `0-9`, but cannot start with a number.
-```
-> a = 5 * 6
-= 30
-
-> a / 4
-= 7.5
-
-> xyz / 3
-Error: Variable `xyz` not found!
- | xyz / 3
- | ^^^
-```
 
 Predefined variables:
  - Pi: `pi`
  - Euler number: `e`
- - Last result: `$`
+ - Last result: `$` (only defined after the first evaluation)
 
-```
-> $
-Error: Variable `$` not found!
- | $
- | ^
-
-> 4 + 6 
-= 10
-
-> $ * 2
-= 20
-```
+ Example: `a = 4 * 5` and after `a + 4` evaluates to `24`
 
 
 ### Functions
@@ -141,14 +129,7 @@ Functions can not be defined by yourself but there are some predefined:
 
 **All trigonometric functions uses radiants.**
 
-```
-> r2d pi
-= 180
-
-> r2d pi + 2
-= 182
-```
-
+Example: `r2d pi` evaluates to `180`
 
 
 ### Operation Order
@@ -157,8 +138,9 @@ Functions can not be defined by yourself but there are some predefined:
  2. Brackets: `( ... )`
  3. Signs: `+`, `-`
  4. Function calls: `r2d`, `sin`, etc
- 5. Multiplicative Operators: `*`, `/`, `%`
- 6. Additions Operators: `+`, `-`
+ 5. Exponential Operators: `**`, `//`
+ 6. Multiplicative Operators: `*`, `/`, `%`
+ 7. Additions Operators: `+`, `-`
 
 So `5 + -4 * 5 + r2d pi + 12` is evaluated as `5 + ((-4) * 5) + (r2d pi) + 12`.
 

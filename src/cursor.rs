@@ -1,4 +1,4 @@
-use super::{Error, Token, TokenValue};
+use crate::{AddOperator, Error, ExpOperator, MulOperator, Token, TokenValue};
 
 pub(crate) struct Cursor {
 	tokens: Vec<Token>,
@@ -40,6 +40,33 @@ impl Cursor {
 		match &token.value {
 			value if *value == expected => Ok(token),
 			_ => Err(token.unexpected()),
+		}
+	}
+
+	pub(crate) fn get_add_op(&mut self) -> Option<AddOperator> {
+		if let TokenValue::AddOperator(op) = self.consume().value {
+			Some(op)
+		} else {
+			self.pointer -= 1;
+			None
+		}
+	}
+
+	pub(crate) fn get_mul_op(&mut self) -> Option<MulOperator> {
+		if let TokenValue::MulOperator(op) = self.consume().value {
+			Some(op)
+		} else {
+			self.pointer -= 1;
+			None
+		}
+	}
+
+	pub(crate) fn get_exp_op(&mut self) -> Option<ExpOperator> {
+		if let TokenValue::ExpOperator(op) = self.consume().value {
+			Some(op)
+		} else {
+			self.pointer -= 1;
+			None
 		}
 	}
 }

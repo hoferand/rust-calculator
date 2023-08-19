@@ -1,4 +1,4 @@
-use super::Error;
+use crate::Error;
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Token {
@@ -16,18 +16,6 @@ impl Token {
 			start,
 			end,
 		}
-	}
-
-	pub(crate) fn is_add_op(&self) -> bool {
-		matches!(self.value, TokenValue::AddOperator(_))
-	}
-
-	pub(crate) fn is_mul_op(&self) -> bool {
-		matches!(self.value, TokenValue::MulOperator(_))
-	}
-
-	pub(crate) fn is_exp_op(&self) -> bool {
-		matches!(self.value, TokenValue::ExpOperator(_))
 	}
 
 	pub(crate) fn unexpected(&self) -> Error {

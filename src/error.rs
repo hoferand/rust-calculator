@@ -1,17 +1,18 @@
 /// This type represents all possible errors that can occur when evaluating an expression.
 #[derive(Debug)]
 pub enum Error {
-	// error message
-	Fatal(String),
-
-	// character, position
-	InvalidCharacter(char, usize),
-
-	// token value, start, end
-	UnexpectedToken(String, usize, usize),
-
-	// variable name, start, end
-	VariableNotFound(String, usize, usize),
+	Fatal(/* message: */ String),
+	InvalidCharacter(/* character: */ char, /* position: */ usize),
+	UnexpectedToken(
+		/* token: */ String,
+		/* start: */ usize,
+		/* end: */ usize,
+	),
+	VariableNotFound(
+		/* variable: */ String,
+		/* start: */ usize,
+		/* end: */ usize,
+	),
 }
 
 impl std::fmt::Display for Error {

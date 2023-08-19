@@ -1,15 +1,22 @@
 use std::collections::HashMap;
 use std::f32::consts::{E, PI};
 
-use super::Variable;
+use crate::Variable;
 
-//// TODO
+//// Represents the environment for saving variable values between multiple calculations.
 pub struct Environment {
 	variables: HashMap<String, Variable>,
 	last_result: Option<f32>,
 }
 
+impl Default for Environment {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl Environment {
+	/// Creates a new and empty environment (for initializing the std lib use `init()`).
 	pub fn new() -> Environment {
 		Environment {
 			variables: HashMap::new(),
@@ -35,6 +42,7 @@ impl Environment {
 		value
 	}
 
+	/// Initializes the std lib on an existing environment.
 	pub fn init(&mut self) {
 		self.variables.insert("pi".to_owned(), Variable::Var(PI));
 		self.variables.insert("e".to_owned(), Variable::Var(E));

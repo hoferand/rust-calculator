@@ -1,4 +1,4 @@
-use super::{AddOperator, Error, ExpOperator, MulOperator, Token, TokenValue};
+use crate::{AddOperator, Error, ExpOperator, MulOperator, Token, TokenValue};
 
 pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
@@ -148,7 +148,6 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::calculator::token::Token;
 
 	#[test]
 	fn test_01_blank_input() {

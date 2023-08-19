@@ -1,4 +1,6 @@
-use super::{AddOperator, Cursor, Environment, Error, MulOperator, TokenValue, Variable};
+use crate::{
+	AddOperator, Cursor, Environment, Error, ExpOperator, MulOperator, TokenValue, Variable,
+};
 
 pub(crate) fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let result = evaluate_statement(tokens, env);
@@ -36,18 +38,16 @@ fn evaluate_assignment(tokens: &mut Cursor, env: &mut Environment) -> Result<f32
 fn evaluate_additive(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_multiplicative(tokens, env)?;
 
-	while tokens.current().is_add_op() {
-		let token = tokens.consume();
-		match token.value {
-			TokenValue::AddOperator(AddOperator::Add) => {
+	while let Some(op) = tokens.get_add_op() {
+		match op {
+			AddOperator::Add => {
 				let right = evaluate_multiplicative(tokens, env)?;
 				left += right
 			}
-			TokenValue::AddOperator(AddOperator::Sub) => {
+			AddOperator::Sub => {
 				let right = evaluate_multiplicative(tokens, env)?;
 				left -= right
 			}
-			_ => return Err(Error::Fatal("Fatal Error!".to_owned())),
 		}
 	}
 
@@ -57,28 +57,26 @@ fn evaluate_additive(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, 
 fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_exponential(tokens, env)?;
 
-	while tokens.current().is_mul_op() {
-		let token = tokens.consume();
-		match token.value {
-			TokenValue::MulOperator(MulOperator::Mul) => {
+	while let Some(op) = tokens.get_mul_op() {
+		match op {
+			MulOperator::Mul => {
 				let right = evaluate_exponential(tokens, env)?;
 				left *= right
 			}
-			TokenValue::MulOperator(MulOperator::Div) => {
+			MulOperator::Div => {
 				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Fatal("Division by 0!".to_owned()));
 				}
 				left /= right
 			}
-			TokenValue::MulOperator(MulOperator::Mod) => {
+			MulOperator::Mod => {
 				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Fatal("Division by 0!".to_owned()));
 				}
 				left %= right
 			}
-			_ => return Err(Error::Fatal("Fatal Error!".to_owned())),
 		}
 	}
 
@@ -88,21 +86,19 @@ fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result
 fn evaluate_exponential(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_atomic(tokens, env)?;
 
-	while tokens.current().is_exp_op() {
-		let token = tokens.consume();
-		match token.value {
-			TokenValue::ExpOperator(super::token::ExpOperator::Power) => {
+	while let Some(op) = tokens.get_exp_op() {
+		match op {
+			ExpOperator::Power => {
 				let right = evaluate_atomic(tokens, env)?;
 				left = left.powf(right)
 			}
-			TokenValue::ExpOperator(super::token::ExpOperator::Root) => {
+			ExpOperator::Root => {
 				let right = evaluate_atomic(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Fatal("Division by 0!".to_owned()));
 				}
 				left = left.powf(1.0 / right)
 			}
-			_ => return Err(Error::Fatal("Fatal Error!".to_owned())),
 		}
 	}
 
@@ -140,7 +136,7 @@ fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Er
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::calculator::token::Token;
+	use crate::Token;
 
 	// only needed for testing
 	fn new_t(value: TokenValue) -> Token {
@@ -366,9 +362,7 @@ mod tests {
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::MulOperator(MulOperator::Mul)),
 					new_t(TokenValue::Number(4.0)),
-					new_t(TokenValue::ExpOperator(
-						crate::calculator::token::ExpOperator::Power
-					)),
+					new_t(TokenValue::ExpOperator(ExpOperator::Power)),
 					new_t(TokenValue::Number(2.0)),
 					new_t(TokenValue::Eof),
 				]),
@@ -604,9 +598,7 @@ mod tests {
 			evaluate_exponential(
 				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(3.0)),
-					new_t(TokenValue::ExpOperator(
-						crate::calculator::token::ExpOperator::Power
-					)),
+					new_t(TokenValue::ExpOperator(ExpOperator::Power)),
 					new_t(TokenValue::Number(2.0)),
 					new_t(TokenValue::Eof),
 				]),
@@ -620,9 +612,7 @@ mod tests {
 			evaluate_exponential(
 				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(8.0)),
-					new_t(TokenValue::ExpOperator(
-						crate::calculator::token::ExpOperator::Root
-					)),
+					new_t(TokenValue::ExpOperator(ExpOperator::Root)),
 					new_t(TokenValue::Number(3.0)),
 					new_t(TokenValue::Eof),
 				]),
@@ -636,9 +626,7 @@ mod tests {
 			evaluate_exponential(
 				&mut Cursor::new(vec![
 					new_t(TokenValue::Number(2.0)),
-					new_t(TokenValue::ExpOperator(
-						crate::calculator::token::ExpOperator::Power
-					)),
+					new_t(TokenValue::ExpOperator(ExpOperator::Power)),
 					new_t(TokenValue::AddOperator(AddOperator::Sub)),
 					new_t(TokenValue::Number(1.0)),
 					new_t(TokenValue::Eof),

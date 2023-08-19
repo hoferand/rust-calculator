@@ -11,19 +11,19 @@ use token::*;
 mod variable;
 use variable::*;
 
-/// Evaluates a single line expression to an f32 value under the given environment.
+/// Evaluates a single line expression to a f32 value under the given environment.
 ///
 /// # Example
 ///
 /// ```
-/// fn main() {
-/// 	let expr = "3 * -(4 + 5)";
-/// 	let mut env = Environment::new();
-/// 	env.init(); // for initializing the std lib
+/// use calculator::*;
 ///
-/// 	let val = calculator::calculate(expr, env).unwrap();
-/// 	println!("{}", val);
-/// }
+/// let expr = "3 * -(4 + 5)";
+/// let mut env = Environment::new();
+/// env.init(); // for initializing the std lib
+///
+/// let val = calculate(expr, &mut env).unwrap();
+/// println!("{}", val);  // prints `-27`
 /// ```
 ///
 /// # Errors
