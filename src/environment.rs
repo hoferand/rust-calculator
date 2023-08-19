@@ -29,11 +29,11 @@ impl Environment {
 		value
 	}
 
-	pub(crate) fn get(&mut self, key: String) -> Option<&Variable> {
+	pub(crate) fn get(&self, key: String) -> Option<&Variable> {
 		return self.variables.get(&key);
 	}
 
-	pub(crate) fn get_last_result(&mut self) -> Option<f32> {
+	pub(crate) fn get_last_result(&self) -> Option<f32> {
 		self.last_result
 	}
 
@@ -86,7 +86,7 @@ mod tests {
 
 	#[test]
 	fn test_02_get_undefined() {
-		let mut env = Environment::new();
+		let env = Environment::new();
 		match env.get("xyz".to_owned()) {
 			None => (),
 			_ => panic!(),
