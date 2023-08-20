@@ -48,12 +48,16 @@ fn main() {
 }
 
 fn print_error_position(input: &str, start: usize, end: usize) {
+	let indent: String = input[0..start]
+		.chars()
+		.map(|c| if c.is_ascii_whitespace() { c } else { ' ' })
+		.collect();
 	eprintln!(
 		" {} {}\n {} {}{}",
 		"|".red().bold(),
 		&input,
 		"|".red().bold(),
-		" ".repeat(start),
+		indent,
 		"^".repeat(end - start + 1).red().bold(),
 	);
 }
