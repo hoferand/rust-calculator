@@ -3,35 +3,34 @@ use crate::{
 };
 
 pub(crate) fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
-	let result = evaluate_statement(tokens, env);
+	let result = evaluate_statement(tokens, env)?;
 
 	// check if all tokens are consumed
-	if let Ok(value) = result {
-		tokens.expect(&TokenValue::Eof)?;
-		env.set_last_result(value);
+	tokens.expect(&TokenValue::Eof)?;
+	env.set_last_result(result);
 
-		return Ok(value);
-	}
-
-	result
+	Ok(result)
 }
 
 fn evaluate_statement(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
-	match (tokens.current().value, tokens.next().value) {
+	match (
+		tokens.current().unwrap_or_default().value,
+		tokens.next().unwrap_or_default().value,
+	) {
 		(TokenValue::Identifier(_), TokenValue::Equals) => evaluate_assignment(tokens, env),
 		_ => evaluate_additive(tokens, env),
 	}
 }
 
 fn evaluate_assignment(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
-	let token = tokens.consume();
-	match token.value {
+	let id = tokens.consume().unwrap_or_default();
+	match id.value {
 		TokenValue::Identifier(id) => {
 			tokens.expect(&TokenValue::Equals)?;
 			let value = evaluate_statement(tokens, env)?;
 			Ok(env.assign(id, value))
 		}
-		_ => Err(token.unexpected()),
+		_ => Err(id.unexpected()),
 	}
 }
 
@@ -66,14 +65,14 @@ fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result
 			MulOperator::Div => {
 				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
-					return Err(Error::Fatal("Division by 0!".to_owned()));
+					return Err(Error::Runtime("Division by 0!"));
 				}
 				left /= right
 			}
 			MulOperator::Mod => {
 				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
-					return Err(Error::Fatal("Division by 0!".to_owned()));
+					return Err(Error::Runtime("Division by 0!"));
 				}
 				left %= right
 			}
@@ -95,7 +94,7 @@ fn evaluate_exponential(tokens: &mut Cursor, env: &mut Environment) -> Result<f3
 			ExpOperator::Root => {
 				let right = evaluate_atomic(tokens, env)?;
 				if right == 0.0 {
-					return Err(Error::Fatal("Division by 0!".to_owned()));
+					return Err(Error::Runtime("Division by 0!"));
 				}
 				left = left.powf(1.0 / right)
 			}
@@ -106,7 +105,7 @@ fn evaluate_exponential(tokens: &mut Cursor, env: &mut Environment) -> Result<f3
 }
 
 fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
-	let token = tokens.consume();
+	let token = tokens.consume().unwrap_or_default();
 	match token.value {
 		TokenValue::Number(val) => Ok(val),
 		TokenValue::Identifier(id) => match env.get(&id) {

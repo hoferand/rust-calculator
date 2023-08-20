@@ -27,7 +27,7 @@ fn main() {
 				Err(e) => {
 					eprintln!("Error: {}", e);
 					match e {
-						Error::Fatal(_) => (),
+						Error::Fatal(_) | Error::Runtime(_) => (),
 						Error::InvalidCharacter(_, pos) => {
 							print_error_position(&input, pos, pos);
 						}

@@ -10,33 +10,25 @@ impl Cursor {
 		Cursor { tokens, pointer: 0 }
 	}
 
-	pub(crate) fn current(&mut self) -> Token {
-		if let Some(token) = self.tokens.get(self.pointer) {
-			return (*token).clone();
-		}
-
-		Token::new(TokenValue::Eof, "EOF".to_owned(), 0, 0)
+	pub(crate) fn current(&mut self) -> Option<Token> {
+		self.tokens.get(self.pointer).cloned()
 	}
 
-	pub(crate) fn consume(&mut self) -> Token {
+	pub(crate) fn consume(&mut self) -> Option<Token> {
 		if let Some(token) = self.tokens.get(self.pointer) {
 			self.pointer += 1;
-			return (*token).clone();
+			Some(token.clone())
+		} else {
+			None
 		}
-
-		Token::new(TokenValue::Eof, "EOF".to_owned(), 0, 0)
 	}
 
-	pub(crate) fn next(&mut self) -> Token {
-		if let Some(token) = self.tokens.get(self.pointer + 1) {
-			return (*token).clone();
-		}
-
-		Token::new(TokenValue::Eof, "EOF".to_owned(), 0, 0)
+	pub(crate) fn next(&mut self) -> Option<Token> {
+		self.tokens.get(self.pointer + 1).cloned()
 	}
 
 	pub(crate) fn expect(&mut self, expected: &TokenValue) -> Result<Token, Error> {
-		let token = self.consume();
+		let token = self.consume().unwrap_or_default();
 		match &token.value {
 			value if value == expected => Ok(token),
 			_ => Err(token.unexpected()),
@@ -44,7 +36,7 @@ impl Cursor {
 	}
 
 	pub(crate) fn get_add_op(&mut self) -> Option<AddOperator> {
-		if let TokenValue::AddOperator(op) = self.consume().value {
+		if let TokenValue::AddOperator(op) = self.consume().unwrap_or_default().value {
 			Some(op)
 		} else {
 			self.pointer -= 1;
@@ -53,7 +45,7 @@ impl Cursor {
 	}
 
 	pub(crate) fn get_mul_op(&mut self) -> Option<MulOperator> {
-		if let TokenValue::MulOperator(op) = self.consume().value {
+		if let TokenValue::MulOperator(op) = self.consume().unwrap_or_default().value {
 			Some(op)
 		} else {
 			self.pointer -= 1;
@@ -62,7 +54,7 @@ impl Cursor {
 	}
 
 	pub(crate) fn get_exp_op(&mut self) -> Option<ExpOperator> {
-		if let TokenValue::ExpOperator(op) = self.consume().value {
+		if let TokenValue::ExpOperator(op) = self.consume().unwrap_or_default().value {
 			Some(op)
 		} else {
 			self.pointer -= 1;

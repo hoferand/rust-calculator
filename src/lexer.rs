@@ -6,7 +6,7 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut start = 0;
 	while let Some(char) = chars.next() {
 		match char {
-			' ' | '\n' | '\t' => (), // ignore spaces, line breaks and tabs
+			' ' | '\n' | '\t' | '\r' => (), // ignore whitespaces
 			'(' => tokens.push(Token::new(
 				TokenValue::OpenBracket,
 				char.to_string(),
@@ -106,7 +106,7 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 					Ok(number) => {
 						tokens.push(Token::new(TokenValue::Number(number), value, start, end))
 					}
-					Err(_) => return Err(Error::Fatal("Cannot parse number!".to_owned())),
+					Err(_) => return Err(Error::Fatal("Cannot parse number!")),
 				}
 				start = end;
 			}
@@ -140,7 +140,7 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 
 		start += 1;
 	}
-	tokens.push(Token::new(TokenValue::Eof, "EOF".to_string(), start, start));
+	tokens.push(Token::new(TokenValue::Eof, "EOF".to_owned(), start, start));
 
 	Ok(tokens)
 }
@@ -152,7 +152,7 @@ mod tests {
 	#[test]
 	fn test_01_blank_input() {
 		assert_eq!(
-			tokenize("   \n\n   \t\t		").unwrap(),
+			tokenize("   \n\n \r \t\t		").unwrap(),
 			vec![Token::new(TokenValue::Eof, "EOF".to_owned(), 12, 12)]
 		);
 	}

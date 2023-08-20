@@ -8,6 +8,17 @@ pub(crate) struct Token {
 	pub end: usize,
 }
 
+impl Default for Token {
+	fn default() -> Self {
+		Self {
+			value: TokenValue::Eof,
+			src: "EOF".to_owned(),
+			start: 0,
+			end: 0,
+		}
+	}
+}
+
 impl Token {
 	pub(crate) fn new(value: TokenValue, src: String, start: usize, end: usize) -> Token {
 		Token {
@@ -20,7 +31,7 @@ impl Token {
 
 	pub(crate) fn unexpected(&self) -> Error {
 		match self.value {
-			TokenValue::Eof => Error::Fatal("Unexpected end of input!".to_owned()),
+			TokenValue::Eof => Error::Runtime("Unexpected end of input!"),
 			_ => Error::UnexpectedToken(self.src.clone(), self.start, self.end),
 		}
 	}
