@@ -50,7 +50,7 @@ fn main() {
 fn print_error_position(input: &str, start: usize, end: usize) {
 	let indent: String = input[0..start]
 		.chars()
-		.map(|c| if c.is_ascii_whitespace() { c } else { ' ' })
+		.map(|c| if c.is_ascii_whitespace() { c } else { ' ' }) // needed for tabs, etc. to be printed correctly
 		.collect();
 	eprintln!(
 		" {} {}\n {} {}{}",
