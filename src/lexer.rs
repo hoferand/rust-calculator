@@ -110,11 +110,11 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 				}
 				start = end;
 			}
-			c if c.is_ascii_alphabetic() => {
+			c if c.is_ascii_alphabetic() || c == '_' => {
 				let mut value = c.to_string();
 				let mut end = start;
 				while let Some(n_char) = chars.peek() {
-					if n_char.is_ascii_alphanumeric() {
+					if n_char.is_ascii_alphanumeric() || *n_char == '_' {
 						if let Some(char) = chars.next() {
 							value.push(char);
 							end += 1;
