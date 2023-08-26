@@ -53,7 +53,7 @@ Error: Unexpected token `(` found!
 >
 ```
 
-Or using it in your own bianry:
+Or use it in your own binary:
 ```rust
 use calculator::*;
 
