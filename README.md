@@ -59,10 +59,9 @@ use calculator::*;
 
 fn main() {
   let expr = "3 * -(4 + 5)";
-  let mut env = Environment::new();
-  env.init(); // for initializing the std lib
-
-  let val = calculate(expr, &mut env).unwrap();
+  let mut calculator = Calculator::new();
+	
+	let val = calculator.calculate(expr).unwrap();
   println!("{}", val); // prints `-27`
 }
 ```

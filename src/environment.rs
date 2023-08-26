@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::f32::consts::{E, PI};
 
-use crate::Variable;
+use crate::{Arguments, Error, Variable};
 
-//// Represents the environment for saving variable values between multiple calculations.
-pub struct Environment {
+pub(crate) struct Environment {
 	variables: HashMap<String, Variable>,
 	last_result: Option<f32>,
 }
@@ -16,8 +15,7 @@ impl Default for Environment {
 }
 
 impl Environment {
-	/// Creates a new and empty environment (for initializing the std lib use `init()`).
-	pub fn new() -> Environment {
+	pub(crate) fn new() -> Environment {
 		Environment {
 			variables: HashMap::new(),
 			last_result: None,
@@ -27,6 +25,14 @@ impl Environment {
 	pub(crate) fn assign(&mut self, key: String, value: f32) -> f32 {
 		self.variables.insert(key, Variable::Var(value));
 		value
+	}
+
+	pub(crate) fn assign_custom(
+		&mut self,
+		key: String,
+		fun: fn(&mut dyn Arguments) -> Result<f32, Error>,
+	) {
+		self.variables.insert(key, Variable::Custom(fun));
 	}
 
 	pub(crate) fn get(&self, key: &str) -> Option<&Variable> {
@@ -42,8 +48,7 @@ impl Environment {
 		value
 	}
 
-	/// Initializes the std lib on an existing environment.
-	pub fn init(&mut self) {
+	pub(crate) fn init_std(&mut self) {
 		self.variables.insert("pi".to_owned(), Variable::Var(PI));
 		self.variables.insert("e".to_owned(), Variable::Var(E));
 
@@ -96,7 +101,7 @@ mod tests {
 	#[test]
 	fn test_03_init() {
 		let mut env = Environment::new();
-		env.init();
+		env.init_std();
 		match env.get("pi") {
 			Some(Variable::Var(val)) => assert_eq!(*val, PI),
 			_ => panic!(),

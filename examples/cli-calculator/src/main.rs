@@ -11,8 +11,10 @@ fn main() {
 	stdout().flush().expect("");
 
 	// initialize environment
-	let mut env = Environment::new();
-	env.init();
+	let mut calculator = Calculator::new();
+	calculator.init_std();
+	calculator.add_custom("twice", twice);
+	calculator.add_custom("min", min);
 
 	// read expressions
 	for input in io::stdin().lock().lines() {
@@ -22,10 +24,10 @@ fn main() {
 			}
 
 			// evaluate line
-			match calculate(&input, &mut env) {
+			match calculator.calculate(&input) {
 				Ok(result) => println!("= {}", result),
 				Err(e) => {
-					eprintln!("Error: {}", e);
+					eprintln!("{}: {}", "ERROR".red(), e);
 					match e {
 						Error::Fatal(_) | Error::Runtime(_) | Error::UnexpectedEndOfInput => (),
 						Error::InvalidCharacter(_, pos) => {
@@ -64,4 +66,15 @@ fn print_error_position(input: &str, start: usize, end: usize) {
 		indent,
 		"^".repeat(end - start + 1).red().bold(),
 	);
+}
+
+fn twice(args: &mut dyn Arguments) -> Result<f32, Error> {
+	let first_arg = args.get_next_arg()?;
+	Ok(first_arg * 2.0)
+}
+
+fn min(args: &mut dyn Arguments) -> Result<f32, Error> {
+	let fst_arg = args.get_next_arg()?;
+	let sec_arg = args.get_next_arg()?;
+	Ok(fst_arg.min(sec_arg))
 }
