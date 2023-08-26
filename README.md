@@ -46,7 +46,7 @@ Simple calculator in Rust
 = -85.5
 
 > (5 + 5(       
-Error: Unexpected token `(` found!
+ERROR: Unexpected token `(` found!
  | (5 + 5(
  |       ^
 
