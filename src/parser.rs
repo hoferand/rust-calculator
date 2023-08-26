@@ -38,15 +38,10 @@ fn evaluate_additive(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, 
 	let mut left = evaluate_multiplicative(tokens, env)?;
 
 	while let Some(op) = tokens.get_add_op() {
+		let right = evaluate_multiplicative(tokens, env)?;
 		match op {
-			AddOperator::Add => {
-				let right = evaluate_multiplicative(tokens, env)?;
-				left += right
-			}
-			AddOperator::Sub => {
-				let right = evaluate_multiplicative(tokens, env)?;
-				left -= right
-			}
+			AddOperator::Add => left += right,
+			AddOperator::Sub => left -= right,
 		}
 	}
 
@@ -57,20 +52,16 @@ fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result
 	let mut left = evaluate_exponential(tokens, env)?;
 
 	while let Some(op) = tokens.get_mul_op() {
+		let right = evaluate_exponential(tokens, env)?;
 		match op {
-			MulOperator::Mul => {
-				let right = evaluate_exponential(tokens, env)?;
-				left *= right
-			}
+			MulOperator::Mul => left *= right,
 			MulOperator::Div => {
-				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Runtime("Division by 0!"));
 				}
 				left /= right
 			}
 			MulOperator::Mod => {
-				let right = evaluate_exponential(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Runtime("Division by 0!"));
 				}
@@ -86,13 +77,10 @@ fn evaluate_exponential(tokens: &mut Cursor, env: &mut Environment) -> Result<f3
 	let mut left = evaluate_atomic(tokens, env)?;
 
 	while let Some(op) = tokens.get_exp_op() {
+		let right = evaluate_atomic(tokens, env)?;
 		match op {
-			ExpOperator::Power => {
-				let right = evaluate_atomic(tokens, env)?;
-				left = left.powf(right)
-			}
+			ExpOperator::Power => left = left.powf(right),
 			ExpOperator::Root => {
-				let right = evaluate_atomic(tokens, env)?;
 				if right == 0.0 {
 					return Err(Error::Runtime("Division by 0!"));
 				}
