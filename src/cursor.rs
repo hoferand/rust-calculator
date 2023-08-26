@@ -31,6 +31,7 @@ impl Cursor {
 		let token = self.consume().ok_or(Error::UnexpectedEndOfInput)?;
 		match &token.value {
 			value if value == expected => Ok(token),
+			TokenValue::Eof => Err(Error::UnexpectedEndOfInput),
 			_ => Err(Error::UnexpectedToken {
 				token: token.src.clone(),
 				start: token.start,
