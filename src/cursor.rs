@@ -28,37 +28,47 @@ impl Cursor {
 	}
 
 	pub(crate) fn expect(&mut self, expected: &TokenValue) -> Result<Token, Error> {
-		let token = self.consume().unwrap_or_default();
+		let token = self.consume().ok_or(Error::UnexpectedEndOfInput)?;
 		match &token.value {
 			value if value == expected => Ok(token),
-			_ => Err(token.unexpected()),
+			_ => Err(Error::UnexpectedToken {
+				token: token.src.clone(),
+				start: token.start,
+				end: token.end,
+			}),
 		}
 	}
 
-	pub(crate) fn get_add_op(&mut self) -> Option<AddOperator> {
-		if let TokenValue::AddOperator(op) = self.consume().unwrap_or_default().value {
-			Some(op)
+	pub(crate) fn get_add_op(&mut self) -> Result<Option<AddOperator>, Error> {
+		if let TokenValue::AddOperator(op) =
+			self.consume().ok_or(Error::UnexpectedEndOfInput)?.value
+		{
+			Ok(Some(op))
 		} else {
 			self.pointer -= 1;
-			None
+			Ok(None)
 		}
 	}
 
-	pub(crate) fn get_mul_op(&mut self) -> Option<MulOperator> {
-		if let TokenValue::MulOperator(op) = self.consume().unwrap_or_default().value {
-			Some(op)
+	pub(crate) fn get_mul_op(&mut self) -> Result<Option<MulOperator>, Error> {
+		if let TokenValue::MulOperator(op) =
+			self.consume().ok_or(Error::UnexpectedEndOfInput)?.value
+		{
+			Ok(Some(op))
 		} else {
 			self.pointer -= 1;
-			None
+			Ok(None)
 		}
 	}
 
-	pub(crate) fn get_exp_op(&mut self) -> Option<ExpOperator> {
-		if let TokenValue::ExpOperator(op) = self.consume().unwrap_or_default().value {
-			Some(op)
+	pub(crate) fn get_exp_op(&mut self) -> Result<Option<ExpOperator>, Error> {
+		if let TokenValue::ExpOperator(op) =
+			self.consume().ok_or(Error::UnexpectedEndOfInput)?.value
+		{
+			Ok(Some(op))
 		} else {
 			self.pointer -= 1;
-			None
+			Ok(None)
 		}
 	}
 }

@@ -27,14 +27,18 @@ fn main() {
 				Err(e) => {
 					eprintln!("Error: {}", e);
 					match e {
-						Error::Fatal(_) | Error::Runtime(_) => (),
+						Error::Fatal(_) | Error::Runtime(_) | Error::UnexpectedEndOfInput => (),
 						Error::InvalidCharacter(_, pos) => {
 							print_error_position(&input, pos, pos);
 						}
-						Error::UnexpectedToken(_, start, end) => {
+						Error::UnexpectedToken {
+							token: _,
+							start,
+							end,
+						} => {
 							print_error_position(&input, start, end);
 						}
-						Error::VariableNotFound(_, start, end) => {
+						Error::VariableNotFound { var: _, start, end } => {
 							print_error_position(&input, start, end);
 						}
 					}

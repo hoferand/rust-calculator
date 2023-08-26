@@ -14,8 +14,8 @@ pub(crate) fn evaluate(tokens: &mut Cursor, env: &mut Environment) -> Result<f32
 
 fn evaluate_statement(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	match (
-		tokens.current().unwrap_or_default().value,
-		tokens.next().unwrap_or_default().value,
+		tokens.current().ok_or(Error::UnexpectedEndOfInput)?.value,
+		tokens.next().ok_or(Error::UnexpectedEndOfInput)?.value,
 	) {
 		(TokenValue::Identifier(_), TokenValue::Equals) => evaluate_assignment(tokens, env),
 		_ => evaluate_additive(tokens, env),
@@ -23,21 +23,25 @@ fn evaluate_statement(tokens: &mut Cursor, env: &mut Environment) -> Result<f32,
 }
 
 fn evaluate_assignment(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
-	let id = tokens.consume().unwrap_or_default();
+	let id = tokens.consume().ok_or(Error::UnexpectedEndOfInput)?;
 	match id.value {
 		TokenValue::Identifier(id) => {
 			tokens.expect(&TokenValue::Equals)?;
 			let value = evaluate_statement(tokens, env)?;
 			Ok(env.assign(id, value))
 		}
-		_ => Err(id.unexpected()),
+		_ => Err(Error::UnexpectedToken {
+			token: id.src.clone(),
+			start: id.start,
+			end: id.end,
+		}),
 	}
 }
 
 fn evaluate_additive(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_multiplicative(tokens, env)?;
 
-	while let Some(op) = tokens.get_add_op() {
+	while let Some(op) = tokens.get_add_op()? {
 		let right = evaluate_multiplicative(tokens, env)?;
 		match op {
 			AddOperator::Add => left += right,
@@ -51,7 +55,7 @@ fn evaluate_additive(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, 
 fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_exponential(tokens, env)?;
 
-	while let Some(op) = tokens.get_mul_op() {
+	while let Some(op) = tokens.get_mul_op()? {
 		let right = evaluate_exponential(tokens, env)?;
 		match op {
 			MulOperator::Mul => left *= right,
@@ -76,7 +80,7 @@ fn evaluate_multiplicative(tokens: &mut Cursor, env: &mut Environment) -> Result
 fn evaluate_exponential(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
 	let mut left = evaluate_atomic(tokens, env)?;
 
-	while let Some(op) = tokens.get_exp_op() {
+	while let Some(op) = tokens.get_exp_op()? {
 		let right = evaluate_atomic(tokens, env)?;
 		match op {
 			ExpOperator::Power => left = left.powf(right),
@@ -93,7 +97,7 @@ fn evaluate_exponential(tokens: &mut Cursor, env: &mut Environment) -> Result<f3
 }
 
 fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Error> {
-	let token = tokens.consume().unwrap_or_default();
+	let token = tokens.consume().ok_or(Error::UnexpectedEndOfInput)?;
 	match token.value {
 		TokenValue::Number(val) => Ok(val),
 		TokenValue::Identifier(id) => match env.get(&id) {
@@ -101,11 +105,19 @@ fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Er
 				Variable::Var(var) => Ok(*var),
 				Variable::Fn(var) => Ok(var(evaluate_atomic(tokens, env)?)),
 			},
-			_ => Err(Error::VariableNotFound(id, token.start, token.end)),
+			_ => Err(Error::VariableNotFound {
+				var: id,
+				start: token.start,
+				end: token.end,
+			}),
 		},
 		TokenValue::LastResult => match env.get_last_result() {
 			Some(var) => Ok(var),
-			_ => Err(Error::VariableNotFound(token.src, token.start, token.end)),
+			_ => Err(Error::VariableNotFound {
+				var: token.src,
+				start: token.start,
+				end: token.end,
+			}),
 		},
 		TokenValue::AddOperator(op) => match op {
 			AddOperator::Add => evaluate_atomic(tokens, env),
@@ -116,7 +128,11 @@ fn evaluate_atomic(tokens: &mut Cursor, env: &mut Environment) -> Result<f32, Er
 			tokens.expect(&TokenValue::CloseBracket)?;
 			value
 		}
-		_ => Err(token.unexpected()),
+		_ => Err(Error::UnexpectedToken {
+			token: token.src.clone(),
+			start: token.start,
+			end: token.end,
+		}),
 	}
 }
 
@@ -125,7 +141,6 @@ mod tests {
 	use super::*;
 	use crate::Token;
 
-	// only needed for testing
 	fn new_t(value: TokenValue) -> Token {
 		Token::new(value, "".to_owned(), 0, 0)
 	}

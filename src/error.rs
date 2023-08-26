@@ -3,17 +3,18 @@
 pub enum Error {
 	Fatal(/* message: */ &'static str),
 	InvalidCharacter(/* character: */ char, /* position: */ usize),
-	UnexpectedToken(
-		/* token: */ String,
-		/* start: */ usize,
-		/* end: */ usize,
-	),
+	UnexpectedToken {
+		token: String,
+		start: usize,
+		end: usize,
+	},
+	UnexpectedEndOfInput,
 	Runtime(/* message: */ &'static str),
-	VariableNotFound(
-		/* variable: */ String,
-		/* start: */ usize,
-		/* end: */ usize,
-	),
+	VariableNotFound {
+		var: String,
+		start: usize,
+		end: usize,
+	},
 }
 
 impl std::fmt::Display for Error {
@@ -21,11 +22,20 @@ impl std::fmt::Display for Error {
 		match self {
 			Self::Fatal(msg) => write!(f, "{}", msg),
 			Self::InvalidCharacter(ch, _) => write!(f, "Invalid character `{}` found!", ch),
-			Self::UnexpectedToken(tk, _, _) => {
-				write!(f, "Unexpected token `{}` found!", tk)
+			Self::UnexpectedToken {
+				token,
+				start: _,
+				end: _,
+			} => {
+				write!(f, "Unexpected token `{}` found!", token)
 			}
 			Self::Runtime(msg) => write!(f, "{}", msg),
-			Self::VariableNotFound(var, _, _) => write!(f, "Variable `{}` not found!", var),
+			Self::VariableNotFound {
+				var,
+				start: _,
+				end: _,
+			} => write!(f, "Variable `{}` not found!", var),
+			Self::UnexpectedEndOfInput => write!(f, "Unexpected end of input!"),
 		}
 	}
 }

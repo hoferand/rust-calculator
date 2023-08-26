@@ -1,22 +1,9 @@
-use crate::Error;
-
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Token {
 	pub value: TokenValue,
 	pub src: String,
 	pub start: usize,
 	pub end: usize,
-}
-
-impl Default for Token {
-	fn default() -> Self {
-		Self {
-			value: TokenValue::Eof,
-			src: "EOF".to_owned(),
-			start: 0,
-			end: 0,
-		}
-	}
 }
 
 impl Token {
@@ -26,13 +13,6 @@ impl Token {
 			src,
 			start,
 			end,
-		}
-	}
-
-	pub(crate) fn unexpected(&self) -> Error {
-		match self.value {
-			TokenValue::Eof => Error::Runtime("Unexpected end of input!"),
-			_ => Error::UnexpectedToken(self.src.clone(), self.start, self.end),
 		}
 	}
 }
