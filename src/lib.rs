@@ -46,12 +46,12 @@ impl Calculator {
 	/// }
 	///
 	/// let mut calculator = Calculator::new();
-	/// calculator.add_custom("twice", twice);
+	/// calculator.add_fn("twice", twice);
 	///
 	/// let val = calculator.calculate("twice 4").unwrap();
 	/// assert_eq!(val, 8.0);
 	/// ```
-	pub fn add_custom(&mut self, id: &str, fun: fn(&mut dyn Arguments) -> Result<f32, Error>) {
+	pub fn add_fn(&mut self, id: &str, fun: fn(&mut dyn Arguments) -> Result<f32, Error>) {
 		self.env.assign_custom(id.to_owned(), fun);
 	}
 
@@ -194,10 +194,41 @@ mod tests {
 		let mut calc = Calculator::new();
 
 		match calc.calculate("$") {
-			Err(_) => (),
+			Err(Error::VariableNotFound {
+				var: _,
+				start: _,
+				end: _,
+			}) => (),
 			_ => panic!(),
 		}
 		assert_eq!(calc.calculate("4 + 5").unwrap(), 9.0);
 		assert_eq!(calc.calculate("$ + 3").unwrap(), 12.0);
+	}
+
+	#[test]
+	fn test_10_custom_function() {
+		fn const_(_args: &mut dyn Arguments) -> Result<f32, Error> {
+			Ok(15.0)
+		}
+
+		fn twice(args: &mut dyn Arguments) -> Result<f32, Error> {
+			let arg = args.get_next_arg()?;
+			Ok(arg * 2.0)
+		}
+
+		fn max(args: &mut dyn Arguments) -> Result<f32, Error> {
+			let fst_arg = args.get_next_arg()?;
+			let snd_arg = args.get_next_arg()?;
+			Ok(fst_arg.max(snd_arg))
+		}
+
+		let mut calc = Calculator::new();
+		calc.add_fn("const", const_);
+		calc.add_fn("twice", twice);
+		calc.add_fn("max", max);
+
+		assert_eq!(calc.calculate("const + 2").unwrap(), 17.0);
+		assert_eq!(calc.calculate("twice 4 + 2").unwrap(), 10.0);
+		assert_eq!(calc.calculate("max 10 4 + 2").unwrap(), 12.0);
 	}
 }

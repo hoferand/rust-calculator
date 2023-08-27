@@ -13,8 +13,8 @@ fn main() {
 	// initialize environment
 	let mut calculator = Calculator::new();
 	calculator.init_std();
-	calculator.add_custom("twice", twice);
-	calculator.add_custom("min", min);
+	calculator.add_fn("twice", twice);
+	calculator.add_fn("min", min);
 
 	// read expressions
 	for input in io::stdin().lock().lines() {
