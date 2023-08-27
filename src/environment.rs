@@ -32,7 +32,7 @@ impl Environment {
 		key: String,
 		fun: fn(&mut dyn Arguments) -> Result<f32, Error>,
 	) {
-		self.variables.insert(key, Variable::Custom(fun));
+		self.variables.insert(key, Variable::Fn(fun));
 	}
 
 	pub(crate) fn get(&self, key: &str) -> Option<&Variable> {
@@ -52,26 +52,44 @@ impl Environment {
 		self.variables.insert("pi".to_owned(), Variable::Var(PI));
 		self.variables.insert("e".to_owned(), Variable::Var(E));
 
-		self.variables
-			.insert("sin".to_owned(), Variable::Fn(|x| x.sin()));
-		self.variables
-			.insert("asin".to_owned(), Variable::Fn(|x| x.asin()));
-		self.variables
-			.insert("cos".to_owned(), Variable::Fn(|x| x.cos()));
-		self.variables
-			.insert("acos".to_owned(), Variable::Fn(|x| x.acos()));
-		self.variables
-			.insert("tan".to_owned(), Variable::Fn(|x| x.tan()));
-		self.variables
-			.insert("atan".to_owned(), Variable::Fn(|x| x.atan()));
-		self.variables
-			.insert("r2d".to_owned(), Variable::Fn(|x| (x * 180.0) / PI));
-		self.variables
-			.insert("d2r".to_owned(), Variable::Fn(|x| (x * PI) / 180.0));
+		self.variables.insert(
+			"sin".to_owned(),
+			Variable::Fn(|a| Ok(a.get_next_arg()?.sin())),
+		);
+		self.variables.insert(
+			"asin".to_owned(),
+			Variable::Fn(|a| Ok(a.get_next_arg()?.asin())),
+		);
+		self.variables.insert(
+			"cos".to_owned(),
+			Variable::Fn(|a| Ok(a.get_next_arg()?.cos())),
+		);
+		self.variables.insert(
+			"acos".to_owned(),
+			Variable::Fn(|a| Ok(a.get_next_arg()?.acos())),
+		);
+		self.variables.insert(
+			"tan".to_owned(),
+			Variable::Fn(|a| Ok(a.get_next_arg()?.tan())),
+		);
+		self.variables.insert(
+			"atan".to_owned(),
+			Variable::Fn(|a| Ok(a.get_next_arg()?.atan())),
+		);
+		self.variables.insert(
+			"r2d".to_owned(),
+			Variable::Fn(|a| Ok((a.get_next_arg()? * 180.0) / PI)),
+		);
+		self.variables.insert(
+			"d2r".to_owned(),
+			Variable::Fn(|a| Ok((a.get_next_arg()? * PI) / 180.0)),
+		);
 
 		#[cfg(test)]
-		self.variables
-			.insert("test".to_owned(), Variable::Fn(|x| x / 2.0));
+		self.variables.insert(
+			"test".to_owned(),
+			Variable::Fn(|a| Ok(a.get_next_arg()? / 2.0)),
+		);
 	}
 }
 
@@ -92,9 +110,8 @@ mod tests {
 	#[test]
 	fn test_02_get_undefined() {
 		let env = Environment::new();
-		match env.get("xyz") {
-			None => (),
-			_ => panic!(),
+		if env.get("xyz").is_some() {
+			panic!();
 		}
 	}
 
@@ -108,7 +125,7 @@ mod tests {
 		}
 
 		match env.get("test") {
-			Some(Variable::Fn(var)) => assert_eq!(var(4.0), 2.0),
+			Some(Variable::Fn(_)) => (),
 			_ => panic!(),
 		}
 	}

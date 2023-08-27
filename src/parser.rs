@@ -117,8 +117,7 @@ impl<'e> Parser<'e> {
 			TokenValue::Identifier(id) => match self.env.get(&id) {
 				Some(var) => match var {
 					Variable::Var(var) => Ok(*var),
-					Variable::Fn(fun) => Ok(fun(self.evaluate_atomic()?)),
-					Variable::Custom(fun) => fun(self),
+					Variable::Fn(fun) => fun(self),
 				},
 				_ => Err(Error::VariableNotFound {
 					var: id,
