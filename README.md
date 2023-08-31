@@ -58,11 +58,11 @@ Or use it in your own binary:
 use calculator::*;
 
 fn main() {
-  let expr = "3 * -(4 + 5)";
-  let mut calculator = Calculator::new();
-	
-	let val = calculator.calculate(expr).unwrap();
-  assert_eq!(val, -27.0);
+    let expr = "3 * -(4 + 5)";
+    let mut calculator = Calculator::new();
+
+    let val = calculator.calculate(expr).unwrap();
+    assert_eq!(val, -27.0);
 }
 ```
 
