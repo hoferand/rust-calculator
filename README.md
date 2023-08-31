@@ -62,7 +62,7 @@ fn main() {
   let mut calculator = Calculator::new();
 	
 	let val = calculator.calculate(expr).unwrap();
-  println!("{}", val); // prints `-27`
+  assert_eq!(val, -27.0);
 }
 ```
 
