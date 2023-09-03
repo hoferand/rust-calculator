@@ -115,7 +115,7 @@ Predefined variables:
 
 ### Functions
 
-Functions can not be defined by yourself but there are some predefined:
+Predefined functions (All trigonometric functions uses radiants):
  - Sinus: `sin`
  - Arcus-Sinus: `asin`
  - Cosinus: `cos`
@@ -125,7 +125,22 @@ Functions can not be defined by yourself but there are some predefined:
  - Radiants to Degrees: `r2d`
  - Degrees to Radiants: `d2r`
 
-**All trigonometric functions uses radiants.**
+**Adding own functions:**
+```rust
+use calculator::*;
+
+fn double(arg: f32) -> f32 {
+    arg * 2.0
+}
+
+fn main() {
+    let mut calculator = Calculator::new();
+    calculator.add_fn("double", double);
+
+    let val = calculator.calculate("double 3").unwrap();
+    assert_eq!(val, 6.0);
+}
+```
 
 Example: `r2d pi` evaluates to `180`
 

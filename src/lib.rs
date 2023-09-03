@@ -2,8 +2,8 @@
 
 pub mod error;
 pub use error::*;
-pub mod arguments;
-pub use arguments::Arguments;
+mod arguments;
+use arguments::Arguments;
 mod cursor;
 use cursor::*;
 mod environment;
@@ -15,6 +15,10 @@ mod token;
 use token::*;
 mod variable;
 use variable::*;
+mod function;
+use function::Function;
+mod handler;
+use handler::Handler;
 
 /// Representation of a calculator instance.
 pub struct Calculator {
@@ -34,7 +38,7 @@ impl Calculator {
 		self.env.init_std()
 	}
 
-	/// Adds a custom function/constant to this calculator instance.
+	/// Adds a custom function to this calculator instance.
 	/// This overrides any existing variable/function with this name without any warning.
 	///
 	/// # Example
@@ -42,19 +46,30 @@ impl Calculator {
 	/// ```
 	/// use calculator::*;
 	///
-	/// fn twice(args: &mut dyn Arguments) -> Result<f32, Error> {
-	///     let arg = args.get_next_arg()?;
-	///     Ok(arg * 2.0)
+	/// fn double(arg: f32) -> f32 {
+	///     arg * 2.0
+	/// }
+	///
+	/// fn min(arg1: f32, arg2: f32) -> Result<f32, Error> {
+	///     Ok(arg1.min(arg2))
 	/// }
 	///
 	/// let mut calculator = Calculator::new();
-	/// calculator.add_fn("twice", twice);
+	/// calculator.add_fn("double", double);
+	/// calculator.add_fn("min", min);
 	///
-	/// let val = calculator.calculate("twice 4").unwrap();
+	/// let val = calculator.calculate("double 4").unwrap();
 	/// assert_eq!(val, 8.0);
+	///
+	/// let val = calculator.calculate("min 2 4").unwrap();
+	/// assert_eq!(val, 2.0);
 	/// ```
-	pub fn add_fn(&mut self, id: &str, fun: fn(&mut dyn Arguments) -> Result<f32, Error>) {
-		self.env.assign_custom(id.to_owned(), fun);
+	pub fn add_fn<H, T>(&mut self, id: impl Into<String>, fun: H)
+	where
+		H: Handler<T> + Clone + 'static,
+		T: 'static,
+	{
+		self.env.assign_fn(id, fun);
 	}
 
 	/// calc.calculates the result of the given expression
@@ -209,28 +224,19 @@ mod tests {
 
 	#[test]
 	fn test_10_custom_function() {
-		fn const_(_args: &mut dyn Arguments) -> Result<f32, Error> {
-			Ok(15.0)
+		fn double(arg: f32) -> f32 {
+			arg * 2.0
 		}
 
-		fn twice(args: &mut dyn Arguments) -> Result<f32, Error> {
-			let arg = args.get_next_arg()?;
-			Ok(arg * 2.0)
-		}
-
-		fn max(args: &mut dyn Arguments) -> Result<f32, Error> {
-			let fst_arg = args.get_next_arg()?;
-			let snd_arg = args.get_next_arg()?;
-			Ok(fst_arg.max(snd_arg))
+		fn max(arg1: f32, arg2: f32) -> Result<f32, Error> {
+			Ok(arg1.max(arg2))
 		}
 
 		let mut calc = Calculator::new();
-		calc.add_fn("const", const_);
-		calc.add_fn("twice", twice);
+		calc.add_fn("double", double);
 		calc.add_fn("max", max);
 
-		assert_eq!(calc.calculate("const + 2").unwrap(), 17.0);
-		assert_eq!(calc.calculate("twice 4 + 2").unwrap(), 10.0);
+		assert_eq!(calc.calculate("double 4 + 2").unwrap(), 10.0);
 		assert_eq!(calc.calculate("max 10 4 + 2").unwrap(), 12.0);
 	}
 }

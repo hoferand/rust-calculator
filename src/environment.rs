@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::f32::consts::{E, PI};
 
-use crate::{Arguments, Error, Variable};
+use crate::function::HandlerFunction;
+use crate::handler::Handler;
+use crate::Variable;
 
 pub(crate) struct Environment {
 	variables: HashMap<String, Variable>,
@@ -22,17 +24,20 @@ impl Environment {
 		}
 	}
 
-	pub(crate) fn assign(&mut self, key: String, value: f32) -> f32 {
-		self.variables.insert(key, Variable::Var(value));
-		value
+	pub(crate) fn assign_var(&mut self, key: impl Into<String>, value: f32) {
+		self.variables.insert(key.into(), Variable::Var(value));
 	}
 
-	pub(crate) fn assign_custom(
-		&mut self,
-		key: String,
-		fun: fn(&mut dyn Arguments) -> Result<f32, Error>,
-	) {
-		self.variables.insert(key, Variable::Fn(fun));
+	pub fn assign_fn<H, T>(&mut self, id: impl Into<String>, fun: H)
+	where
+		H: Handler<T> + Clone + 'static,
+		T: 'static,
+	{
+		let hf = HandlerFunction {
+			handler: fun,
+			call: |h, ctx| h.call(ctx),
+		};
+		self.variables.insert(id.into(), Variable::Fn(Box::new(hf)));
 	}
 
 	pub(crate) fn get(&self, key: &str) -> Option<&Variable> {
@@ -49,47 +54,20 @@ impl Environment {
 	}
 
 	pub(crate) fn init_std(&mut self) {
-		self.variables.insert("pi".to_owned(), Variable::Var(PI));
-		self.variables.insert("e".to_owned(), Variable::Var(E));
+		self.assign_var("pi", PI);
+		self.assign_var("e", E);
 
-		self.variables.insert(
-			"sin".to_owned(),
-			Variable::Fn(|a| Ok(a.get_next_arg()?.sin())),
-		);
-		self.variables.insert(
-			"asin".to_owned(),
-			Variable::Fn(|a| Ok(a.get_next_arg()?.asin())),
-		);
-		self.variables.insert(
-			"cos".to_owned(),
-			Variable::Fn(|a| Ok(a.get_next_arg()?.cos())),
-		);
-		self.variables.insert(
-			"acos".to_owned(),
-			Variable::Fn(|a| Ok(a.get_next_arg()?.acos())),
-		);
-		self.variables.insert(
-			"tan".to_owned(),
-			Variable::Fn(|a| Ok(a.get_next_arg()?.tan())),
-		);
-		self.variables.insert(
-			"atan".to_owned(),
-			Variable::Fn(|a| Ok(a.get_next_arg()?.atan())),
-		);
-		self.variables.insert(
-			"r2d".to_owned(),
-			Variable::Fn(|a| Ok((a.get_next_arg()? * 180.0) / PI)),
-		);
-		self.variables.insert(
-			"d2r".to_owned(),
-			Variable::Fn(|a| Ok((a.get_next_arg()? * PI) / 180.0)),
-		);
+		self.assign_fn("sin", f32::sin);
+		self.assign_fn("asin", f32::asin);
+		self.assign_fn("cos", f32::cos);
+		self.assign_fn("acos", f32::acos);
+		self.assign_fn("tan", f32::tan);
+		self.assign_fn("atan", f32::atan);
+		self.assign_fn("r2d", |a: f32| (a * 180.0) / PI);
+		self.assign_fn("d2r", |a: f32| (a * PI) / 180.0);
 
 		#[cfg(test)]
-		self.variables.insert(
-			"test".to_owned(),
-			Variable::Fn(|a| Ok(a.get_next_arg()? / 2.0)),
-		);
+		self.assign_fn("test", |a: f32| a / 2.0);
 	}
 }
 
@@ -100,7 +78,7 @@ mod tests {
 	#[test]
 	fn test_01_assignment() {
 		let mut env = Environment::new();
-		assert_eq!(env.assign("var1".to_owned(), 34.5), 34.5);
+		env.assign_var("var1", 34.5);
 		match env.get("var1") {
 			Some(Variable::Var(val)) => assert_eq!(*val, 34.5),
 			_ => panic!(),

@@ -42,7 +42,8 @@ impl<'e> Parser<'e> {
 			TokenValue::Identifier(id) => {
 				self.tokens.expect(&TokenValue::Equals)?;
 				let value = self.evaluate_statement()?;
-				Ok(self.env.assign(id, value))
+				self.env.assign_var(id, value);
+				Ok(value)
 			}
 			_ => Err(Error::UnexpectedToken {
 				token: id.src.clone(),
@@ -117,7 +118,7 @@ impl<'e> Parser<'e> {
 			TokenValue::Identifier(id) => match self.env.get(&id) {
 				Some(var) => match var {
 					Variable::Var(var) => Ok(*var),
-					Variable::Fn(fun) => fun(self),
+					Variable::Fn(fun) => fun.clone_box().call_with_args(self),
 				},
 				_ => Err(Error::VariableNotFound {
 					var: id,

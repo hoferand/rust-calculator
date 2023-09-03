@@ -13,7 +13,7 @@ fn main() {
 	// initialize environment
 	let mut calculator = Calculator::new();
 	calculator.init_std();
-	calculator.add_fn("twice", twice);
+	calculator.add_fn("double", double);
 	calculator.add_fn("min", min);
 
 	// read expressions
@@ -68,13 +68,10 @@ fn print_error_position(input: &str, start: usize, end: usize) {
 	);
 }
 
-fn twice(args: &mut dyn Arguments) -> Result<f32, Error> {
-	let first_arg = args.get_next_arg()?;
-	Ok(first_arg * 2.0)
+fn double(arg: f32) -> f32 {
+	arg * 2.0
 }
 
-fn min(args: &mut dyn Arguments) -> Result<f32, Error> {
-	let fst_arg = args.get_next_arg()?;
-	let sec_arg = args.get_next_arg()?;
-	Ok(fst_arg.min(sec_arg))
+fn min(arg1: f32, arg2: f32) -> Result<f32, Error> {
+	Ok(arg1.min(arg2))
 }

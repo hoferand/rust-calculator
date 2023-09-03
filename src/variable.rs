@@ -1,6 +1,6 @@
-use crate::{Arguments, Error};
+use crate::Function;
 
 pub(crate) enum Variable {
 	Var(f32),
-	Fn(fn(&mut dyn Arguments) -> Result<f32, Error>),
+	Fn(Box<dyn Function>),
 }
