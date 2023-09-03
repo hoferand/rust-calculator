@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 use std::f32::consts::{E, PI};
 
-use crate::function::HandlerFunction;
-use crate::handler::Handler;
-use crate::Variable;
+use crate::{Handler, HandlerFunction, Variable};
 
 pub(crate) struct Environment {
 	variables: HashMap<String, Variable>,

@@ -1,6 +1,5 @@
-use crate::{Arguments, Error};
+use crate::{Arguments, Error, FromArguments, IntoResult};
 
-/// CustomFunction
 pub trait Handler<T> {
 	fn call(&self, args: &mut dyn Arguments) -> Result<f32, Error>;
 }
@@ -43,33 +42,5 @@ where
 			T3::from_args(args)?,
 		)
 		.into_result()
-	}
-}
-
-/// FromArguments
-pub(crate) trait FromArguments: Sized {
-	fn from_args(args: &mut dyn Arguments) -> Result<Self, Error>;
-}
-
-impl FromArguments for f32 {
-	fn from_args(args: &mut dyn Arguments) -> Result<Self, Error> {
-		args.get_next_arg()
-	}
-}
-
-/// IntoResult
-pub(crate) trait IntoResult {
-	fn into_result(self) -> Result<f32, Error>;
-}
-
-impl IntoResult for f32 {
-	fn into_result(self) -> Result<f32, Error> {
-		Ok(self)
-	}
-}
-
-impl IntoResult for Result<f32, Error> {
-	fn into_result(self) -> Result<f32, Error> {
-		self
 	}
 }
