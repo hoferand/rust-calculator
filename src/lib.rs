@@ -44,8 +44,34 @@ impl Calculator {
 		self.env.init_std()
 	}
 
+	/// Adds a custom predefined variable to this calculator instance.
+	/// This overrides any existing variable/function with this name without any warning.
+	///
+	/// # Example
+	///
+	/// ```
+	/// use calculator::*;
+	///
+	/// let mut calculator = Calculator::new();
+	/// calculator.add_var("foo", 40.0);
+	///
+	/// let val = calculator.calculate("foo + 2").unwrap();
+	/// assert_eq!(val, 42.0);
+	/// ```
+	pub fn add_var(&mut self, id: impl Into<String>, val: f32) {
+		self.env.assign_var(id, val);
+	}
+
 	/// Adds a custom function to this calculator instance.
 	/// This overrides any existing variable/function with this name without any warning.
+	///
+	/// Supported function types (details: [`Handler`](handler)):  
+	///  - fn(f32) -> f32
+	///  - fn(f32) -> Result<f32, Error>
+	///  - fn(f32, f32) -> f32
+	///  - fn(f32, f32) -> Result<f32, Error>
+	///  - fn(f32, f32, f32) -> f32
+	///  - fn(f32, f32, f32) -> Result<f32, Error>
 	///
 	/// # Example
 	///

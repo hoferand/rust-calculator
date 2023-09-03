@@ -10,9 +10,15 @@ fn main() {
 	print!("> ");
 	stdout().flush().expect("");
 
-	// initialize environment
 	let mut calculator = Calculator::new();
+
+	// initialize std lib
 	calculator.init_std();
+
+	// initialize predefined variables
+	calculator.add_var("foo", 40.0);
+
+	// initialize predefined functions
 	calculator.add_fn("double", double);
 	calculator.add_fn("min", min);
 

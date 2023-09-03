@@ -26,7 +26,7 @@ impl Environment {
 		self.variables.insert(key.into(), Variable::Var(value));
 	}
 
-	pub fn assign_fn<H, T>(&mut self, id: impl Into<String>, fun: H)
+	pub(crate) fn assign_fn<H, T>(&mut self, id: impl Into<String>, fun: H)
 	where
 		H: Handler<T> + Clone + 'static,
 		T: 'static,
