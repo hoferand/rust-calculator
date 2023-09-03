@@ -10,7 +10,7 @@ impl Cursor {
 		Cursor { tokens, pointer: 0 }
 	}
 
-	pub(crate) fn current(&mut self) -> Option<Token> {
+	pub(crate) fn current(&self) -> Option<Token> {
 		self.tokens.get(self.pointer).cloned()
 	}
 
@@ -23,7 +23,7 @@ impl Cursor {
 		}
 	}
 
-	pub(crate) fn next(&mut self) -> Option<Token> {
+	pub(crate) fn next(&self) -> Option<Token> {
 		self.tokens.get(self.pointer + 1).cloned()
 	}
 
