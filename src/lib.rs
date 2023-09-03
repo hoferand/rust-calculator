@@ -78,7 +78,7 @@ impl Calculator {
 		self.env.assign_fn(id, fun);
 	}
 
-	/// calc.calculates the result of the given expression
+	/// Calculates the result of the given expression
 	///
 	/// # Example
 	///
