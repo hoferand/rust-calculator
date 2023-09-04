@@ -257,4 +257,12 @@ mod tests {
 		assert_eq!(calc.calculate("double 4 + 2").unwrap(), 10.0);
 		assert_eq!(calc.calculate("max 10 4 + 2").unwrap(), 12.0);
 	}
+
+	#[test]
+	fn test_11_predefined_variable() {
+		let mut calc = Calculator::new();
+		calc.add_var("foo", 40.0);
+
+		assert_eq!(calc.calculate("foo + 2").unwrap(), 42.0);
+	}
 }
