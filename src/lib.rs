@@ -2,29 +2,15 @@
 
 pub mod error;
 pub use error::*;
-mod arguments;
-use arguments::Arguments;
 mod cursor;
 use cursor::*;
 mod environment;
-use environment::Environment;
+use environment::*;
 mod lexer;
 mod parser;
 use parser::Parser;
 mod token;
 use token::*;
-mod variable;
-use variable::*;
-mod function;
-use function::Function;
-mod handler;
-use handler::Handler;
-mod from_arguments;
-use from_arguments::FromArguments;
-mod into_result;
-use into_result::IntoResult;
-mod handler_function;
-use handler_function::HandlerFunction;
 
 /// Representation of a calculator instance.
 pub struct Calculator {
