@@ -125,6 +125,8 @@ Predefined functions (All trigonometric functions uses radiants):
  - Radiants to Degrees: `r2d`
  - Degrees to Radiants: `d2r`
 
+Example: `r2d pi` evaluates to `180`
+
 **Adding own functions:**
 ```rust
 use calculator::*;
@@ -141,8 +143,6 @@ fn main() {
     assert_eq!(val, 6.0);
 }
 ```
-
-Example: `r2d pi` evaluates to `180`
 
 
 ### Operation Order
