@@ -88,7 +88,7 @@ You can use integer `45` as well as floating point values `45.43`.
 
 ### Brackets
 
-For changing the evaluation order of the expressions you can use brackets `( ... )`.  
+For changing the evaluation precedence of the expressions you can use brackets `( ... )`.  
 The brackets can be nested arbitrarily `(( ... ) + ( ... ))`.
 
 
@@ -145,7 +145,7 @@ fn main() {
 ```
 
 
-### Operation Order
+### Operation Precedence
 
  1. Numbers / Variables: `3`, `4.5`, `var`, etc
  2. Brackets: `( ... )`
