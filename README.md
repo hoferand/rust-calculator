@@ -36,7 +36,7 @@ Afterwards you can clone this repository and run it as described in [Usage](#usa
 ## Usage
 
 You can try this calculator by running the binary in the `examples/cli-calculator` directory.
-```ignore
+```bash
 $ cargo run
 Simple calculator in Rust
 > 4 + 5
