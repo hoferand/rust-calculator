@@ -131,16 +131,24 @@ Example: `r2d pi` evaluates to `180`
 ```rust
 use calculator::*;
 
-fn double(arg: f32) -> f32 {
-    arg * 2.0
+fn div(left: f32, right: f32) -> Result<f32, Error> {
+    if right == 0.0 {
+        Err(Error::Fatal("Division by zero!"))
+    } else {
+        Ok(left / right)
+    }
 }
 
 fn main() {
     let mut calculator = Calculator::new();
-    calculator.add_fn("double", double);
+    calculator.add_fn("double", |arg: f32| arg * 2.0);
+    calculator.add_fn("div", div);
 
     let val = calculator.calculate("double 3").unwrap();
     assert_eq!(val, 6.0);
+
+    let err = calculator.calculate("div 2 0").unwrap_err();
+    assert_eq!(err, Error::Fatal("Division by zero!"));
 }
 ```
 
