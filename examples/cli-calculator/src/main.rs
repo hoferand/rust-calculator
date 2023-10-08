@@ -1,14 +1,11 @@
-use std::io::{self, stdout, BufRead, Write};
-
 use colored::Colorize;
+use rustyline::DefaultEditor;
 
 use calculator::*;
 
 /// A simple demo application for demonstrating the calculator lib.
 fn main() {
 	println!("Simple calculator in Rust");
-	print!("> ");
-	stdout().flush().expect("");
 
 	let mut calculator = Calculator::new();
 
@@ -19,43 +16,48 @@ fn main() {
 	calculator.add_var("foo", 40.0);
 
 	// initialize predefined functions
-	calculator.add_fn("double", double);
-	calculator.add_fn("min", min);
+	calculator.add_fn("double", |arg: f32| arg * 2.0);
+	fn div(a: f32, b: f32) -> Result<f32, Error> {
+		if b == 0.0 {
+			Err(Error::Fatal("Division by zero!"))
+		} else {
+			Ok(a / b)
+		}
+	}
+	calculator.add_fn("div", div);
 
 	// read expressions
-	for input in io::stdin().lock().lines() {
-		if let Ok(input) = input {
-			if input.is_empty() {
-				break;
-			}
+	let mut rl = DefaultEditor::new().expect("");
+	while let Ok(input) = rl.readline("> ") {
+		if input.is_empty() {
+			break;
+		}
 
-			// evaluate line
-			match calculator.calculate(&input) {
-				Ok(result) => println!("= {}", result),
-				Err(e) => {
-					eprintln!("{}: {}", "ERROR".red(), e);
-					match e {
-						Error::Fatal(_) | Error::Runtime(_) | Error::UnexpectedEndOfInput => (),
-						Error::InvalidCharacter(_, pos) => {
-							print_error_position(&input, pos, pos);
-						}
-						Error::UnexpectedToken {
-							token: _,
-							start,
-							end,
-						} => {
-							print_error_position(&input, start, end);
-						}
-						Error::VariableNotFound { var: _, start, end } => {
-							print_error_position(&input, start, end);
-						}
+		rl.add_history_entry(&input).expect("");
+
+		// evaluate line
+		match calculator.calculate(&input) {
+			Ok(result) => println!("= {}", result),
+			Err(e) => {
+				eprintln!("{}: {}", "ERROR".red(), e);
+				match e {
+					Error::Fatal(_) | Error::Runtime(_) | Error::UnexpectedEndOfInput => (),
+					Error::InvalidCharacter(_, pos) => {
+						print_error_position(&input, pos, pos);
+					}
+					Error::UnexpectedToken {
+						token: _,
+						start,
+						end,
+					} => {
+						print_error_position(&input, start, end);
+					}
+					Error::VariableNotFound { var: _, start, end } => {
+						print_error_position(&input, start, end);
 					}
 				}
 			}
 		}
-
-		print!("\n> ");
-		stdout().flush().expect("");
 	}
 }
 
@@ -72,12 +74,4 @@ fn print_error_position(input: &str, start: usize, end: usize) {
 		indent,
 		"^".repeat(end - start + 1).red().bold(),
 	);
-}
-
-fn double(arg: f32) -> f32 {
-	arg * 2.0
-}
-
-fn min(arg1: f32, arg2: f32) -> Result<f32, Error> {
-	Ok(arg1.min(arg2))
 }

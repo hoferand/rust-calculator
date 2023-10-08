@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 calculator = { path = "../../" }
 
-colored = "2"
+colored = "2.0"
+rustyline = "12.0"

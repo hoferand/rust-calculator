@@ -64,23 +64,24 @@ impl Calculator {
 	/// ```
 	/// use calculator::*;
 	///
-	/// fn double(arg: f32) -> f32 {
-	///     arg * 2.0
-	/// }
 	///
-	/// fn min(arg1: f32, arg2: f32) -> Result<f32, Error> {
-	///     Ok(arg1.min(arg2))
+	/// fn div(left: f32, right: f32) -> Result<f32, Error> {
+	///     if right == 0.0 {
+	///         Err(Error::Fatal("Division by zero!"))
+	///     } else {
+	///         Ok(left / right)
+	///     }
 	/// }
 	///
 	/// let mut calculator = Calculator::new();
-	/// calculator.add_fn("double", double);
-	/// calculator.add_fn("min", min);
+	/// calculator.add_fn("double", |arg: f32| arg * 2.0);
+	/// calculator.add_fn("div", div);
 	///
 	/// let val = calculator.calculate("double 4").unwrap();
 	/// assert_eq!(val, 8.0);
 	///
-	/// let val = calculator.calculate("min 2 4").unwrap();
-	/// assert_eq!(val, 2.0);
+	/// let err = calculator.calculate("div 2 0").unwrap_err();
+	/// assert_eq!(err, Error::Fatal("Division by zero!"));
 	/// ```
 	pub fn add_fn<H, T>(&mut self, id: impl Into<String>, fun: H)
 	where

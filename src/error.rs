@@ -1,5 +1,5 @@
 /// This type represents all possible errors that can occur when evaluating an expression.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
 	Fatal(/* message: */ &'static str),
 	InvalidCharacter(/* character: */ char, /* position: */ usize),
