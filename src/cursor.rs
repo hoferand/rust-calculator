@@ -33,7 +33,7 @@ impl Cursor {
 			value if value == expected => Ok(token),
 			TokenValue::Eof => Err(Error::UnexpectedEndOfInput),
 			_ => Err(Error::UnexpectedToken {
-				token: token.src.clone(),
+				token: token.src,
 				start: token.start,
 				end: token.end,
 			}),

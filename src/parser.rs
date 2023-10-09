@@ -46,7 +46,7 @@ impl<'e> Parser<'e> {
 				Ok(value)
 			}
 			_ => Err(Error::UnexpectedToken {
-				token: id.src.clone(),
+				token: id.src,
 				start: id.start,
 				end: id.end,
 			}),
@@ -145,7 +145,7 @@ impl<'e> Parser<'e> {
 			}
 			TokenValue::Eof => Err(Error::UnexpectedEndOfInput),
 			_ => Err(Error::UnexpectedToken {
-				token: token.src.clone(),
+				token: token.src,
 				start: token.start,
 				end: token.end,
 			}),

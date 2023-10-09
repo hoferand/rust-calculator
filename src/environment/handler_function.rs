@@ -2,7 +2,7 @@ use crate::{Arguments, Error, Function};
 
 pub(crate) struct HandlerFunction<H: Clone> {
 	pub handler: H,
-	pub call: fn(H, &mut dyn Arguments) -> Result<f32, Error>,
+	pub call: fn(&H, &mut dyn Arguments) -> Result<f32, Error>,
 }
 
 impl<H: Clone> Clone for HandlerFunction<H> {
@@ -23,6 +23,6 @@ where
 	}
 
 	fn call_with_args(&self, args: &mut dyn Arguments) -> Result<f32, Error> {
-		(self.call)(self.handler.clone(), args)
+		(self.call)(&self.handler, args)
 	}
 }
