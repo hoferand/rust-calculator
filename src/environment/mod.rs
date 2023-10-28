@@ -74,8 +74,8 @@ impl Environment {
 		self.assign_fn("acos", f32::acos);
 		self.assign_fn("tan", f32::tan);
 		self.assign_fn("atan", f32::atan);
-		self.assign_fn("r2d", |a: f32| (a * 180.0) / PI);
-		self.assign_fn("d2r", |a: f32| (a * PI) / 180.0);
+		self.assign_fn("r2d", f32::to_degrees);
+		self.assign_fn("d2r", f32::to_radians);
 
 		#[cfg(test)]
 		self.assign_fn("test", |a: f32| a / 2.0);
