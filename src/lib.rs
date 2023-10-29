@@ -243,16 +243,12 @@ mod tests {
 
 	#[test]
 	fn test_10_custom_function() {
-		fn double(arg: f32) -> f32 {
-			arg * 2.0
-		}
-
 		fn max(arg1: f32, arg2: f32) -> Result<f32, Error> {
 			Ok(arg1.max(arg2))
 		}
 
 		let mut calc = Calculator::new();
-		calc.add_fn("double", double);
+		calc.add_fn("double", |arg: f32| arg * 2.0);
 		calc.add_fn("max", max);
 
 		assert_eq!(calc.calculate("double 4 + 2").unwrap(), 10.0);
