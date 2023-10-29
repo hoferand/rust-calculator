@@ -24,32 +24,32 @@ impl<'e> Parser<'e> {
 	}
 
 	fn evaluate_statement(&mut self) -> Result<f32, Error> {
-		match (
+		if let (TokenValue::Identifier(_), TokenValue::Equals) = (
 			self.tokens
 				.current()
 				.ok_or(Error::UnexpectedEndOfInput)?
 				.value,
 			self.tokens.next().ok_or(Error::UnexpectedEndOfInput)?.value,
 		) {
-			(TokenValue::Identifier(_), TokenValue::Equals) => self.evaluate_assignment(),
-			_ => self.evaluate_additive(),
+			self.evaluate_assignment()
+		} else {
+			self.evaluate_additive()
 		}
 	}
 
 	fn evaluate_assignment(&mut self) -> Result<f32, Error> {
 		let id = self.tokens.consume().ok_or(Error::UnexpectedEndOfInput)?;
-		match id.value {
-			TokenValue::Identifier(id) => {
-				self.tokens.expect(&TokenValue::Equals)?;
-				let value = self.evaluate_statement()?;
-				self.env.assign_var(id, value);
-				Ok(value)
-			}
-			_ => Err(Error::UnexpectedToken {
+		if let TokenValue::Identifier(id) = id.value {
+			self.tokens.expect(&TokenValue::Equals)?;
+			let value = self.evaluate_statement()?;
+			self.env.assign_var(id, value);
+			Ok(value)
+		} else {
+			Err(Error::UnexpectedToken {
 				token: id.src,
 				start: id.start,
 				end: id.end,
-			}),
+			})
 		}
 	}
 
@@ -115,25 +115,31 @@ impl<'e> Parser<'e> {
 		let token = self.tokens.consume().ok_or(Error::UnexpectedEndOfInput)?;
 		match token.value {
 			TokenValue::Number(val) => Ok(val),
-			TokenValue::Identifier(id) => match self.env.get(&id) {
-				Some(var) => match var {
-					Variable::Var(var) => Ok(*var),
-					Variable::Fn(fun) => fun.clone_box().call_with_args(self),
-				},
-				_ => Err(Error::VariableNotFound {
-					var: id,
-					start: token.start,
-					end: token.end,
-				}),
-			},
-			TokenValue::LastResult => match self.env.get_last_result() {
-				Some(var) => Ok(var),
-				_ => Err(Error::VariableNotFound {
-					var: token.src,
-					start: token.start,
-					end: token.end,
-				}),
-			},
+			TokenValue::Identifier(id) => {
+				if let Some(var) = self.env.get(&id) {
+					match var {
+						Variable::Var(var) => Ok(*var),
+						Variable::Fn(fun) => fun.clone_box().call_with_args(self),
+					}
+				} else {
+					Err(Error::VariableNotFound {
+						var: id,
+						start: token.start,
+						end: token.end,
+					})
+				}
+			}
+			TokenValue::LastResult => {
+				if let Some(var) = self.env.get_last_result() {
+					Ok(var)
+				} else {
+					Err(Error::VariableNotFound {
+						var: token.src,
+						start: token.start,
+						end: token.end,
+					})
+				}
+			}
 			TokenValue::AddOperator(op) => match op {
 				AddOperator::Add => self.evaluate_atomic(),
 				AddOperator::Sub => Ok(-(self.evaluate_atomic()?)),
