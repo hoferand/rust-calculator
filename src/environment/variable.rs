@@ -1,6 +1,6 @@
-use crate::Function;
+use super::Function;
 
-pub(crate) enum Variable {
+pub enum Variable {
 	Var(f32),
 	Fn(Box<dyn Function>),
 }

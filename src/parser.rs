@@ -3,17 +3,17 @@ use crate::{
 	Variable,
 };
 
-pub(crate) struct Parser<'e> {
+pub struct Parser<'e> {
 	tokens: Cursor,
 	env: &'e mut Environment,
 }
 
 impl<'e> Parser<'e> {
-	pub(crate) fn new(tokens: Cursor, env: &'e mut Environment) -> Self {
+	pub fn new(tokens: Cursor, env: &'e mut Environment) -> Self {
 		Self { tokens, env }
 	}
 
-	pub(crate) fn evaluate(&mut self) -> Result<f32, Error> {
+	pub fn evaluate(&mut self) -> Result<f32, Error> {
 		let result = self.evaluate_statement()?;
 
 		// check if all tokens are consumed

@@ -1,6 +1,8 @@
-use crate::{Arguments, Error, Function};
+use crate::Error;
 
-pub(crate) struct HandlerFunction<H: Clone> {
+use super::{Arguments, Function};
+
+pub struct HandlerFunction<H: Clone> {
 	pub handler: H,
 	pub call: fn(&H, &mut dyn Arguments) -> Result<f32, Error>,
 }

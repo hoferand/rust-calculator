@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct Token {
+pub struct Token {
 	pub value: TokenValue,
 	pub src: String,
 	pub start: usize,
@@ -7,7 +7,7 @@ pub(crate) struct Token {
 }
 
 impl Token {
-	pub(crate) fn new(value: TokenValue, src: String, start: usize, end: usize) -> Token {
+	pub fn new(value: TokenValue, src: String, start: usize, end: usize) -> Token {
 		Token {
 			value,
 			src,
@@ -18,7 +18,7 @@ impl Token {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum TokenValue {
+pub enum TokenValue {
 	Number(f32),
 	AddOperator(AddOperator),
 	MulOperator(MulOperator),
@@ -33,20 +33,20 @@ pub(crate) enum TokenValue {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum AddOperator {
+pub enum AddOperator {
 	Add,
 	Sub,
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum MulOperator {
+pub enum MulOperator {
 	Mul,
 	Div,
 	Mod,
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum ExpOperator {
+pub enum ExpOperator {
 	Power,
 	Root,
 }

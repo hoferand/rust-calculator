@@ -1,6 +1,6 @@
 use crate::{AddOperator, Error, ExpOperator, MulOperator, Token, TokenValue};
 
-pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
+pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut tokens: Vec<Token> = Vec::new();
 	let mut chars = input.chars().peekable();
 	let mut start = 0;

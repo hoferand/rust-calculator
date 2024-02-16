@@ -1,6 +1,6 @@
 use crate::{Arguments, Error};
 
-pub(crate) trait FromArguments: Sized {
+pub trait FromArguments: Sized {
 	fn from_args(args: &mut dyn Arguments) -> Result<Self, Error>;
 }
 

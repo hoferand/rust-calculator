@@ -1,4 +1,6 @@
-use crate::{Arguments, Error, FromArguments, IntoResult};
+use crate::Error;
+
+use super::{Arguments, FromArguments, IntoResult};
 
 pub trait Handler<T> {
 	fn call(&self, args: &mut dyn Arguments) -> Result<f32, Error>;

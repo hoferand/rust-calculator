@@ -1,22 +1,22 @@
 use std::collections::HashMap;
 use std::f32::consts::{E, PI};
 
-pub(crate) mod arguments;
-pub(crate) use arguments::*;
-pub(crate) mod from_arguments;
-pub(crate) use from_arguments::*;
-pub(crate) mod function;
-pub(crate) use function::*;
-pub(crate) mod handler;
-pub(crate) use handler::*;
-pub(crate) mod handler_function;
-pub(crate) use handler_function::*;
-pub(crate) mod into_result;
-pub(crate) use into_result::*;
-pub(crate) mod variable;
-pub(crate) use variable::*;
+pub mod arguments;
+pub use arguments::*;
+pub mod handler;
+pub use handler::*;
+pub mod variable;
+pub use variable::*;
+mod from_arguments;
+use from_arguments::*;
+mod function;
+use function::*;
+mod handler_function;
+use handler_function::*;
+mod into_result;
+use into_result::*;
 
-pub(crate) struct Environment {
+pub struct Environment {
 	variables: HashMap<String, Variable>,
 	last_result: Option<f32>,
 }
@@ -28,18 +28,18 @@ impl Default for Environment {
 }
 
 impl Environment {
-	pub(crate) fn new() -> Environment {
+	pub fn new() -> Environment {
 		Environment {
 			variables: HashMap::new(),
 			last_result: None,
 		}
 	}
 
-	pub(crate) fn assign_var(&mut self, key: impl Into<String>, value: f32) {
+	pub fn assign_var(&mut self, key: impl Into<String>, value: f32) {
 		self.variables.insert(key.into(), Variable::Var(value));
 	}
 
-	pub(crate) fn assign_fn<H, T>(&mut self, id: impl Into<String>, fun: H)
+	pub fn assign_fn<H, T>(&mut self, id: impl Into<String>, fun: H)
 	where
 		H: Handler<T> + Clone + 'static,
 		T: 'static,
@@ -51,20 +51,20 @@ impl Environment {
 		self.variables.insert(id.into(), Variable::Fn(Box::new(hf)));
 	}
 
-	pub(crate) fn get(&self, key: &str) -> Option<&Variable> {
+	pub fn get(&self, key: &str) -> Option<&Variable> {
 		return self.variables.get(key);
 	}
 
-	pub(crate) fn get_last_result(&self) -> Option<f32> {
+	pub fn get_last_result(&self) -> Option<f32> {
 		self.last_result
 	}
 
-	pub(crate) fn set_last_result(&mut self, value: f32) -> f32 {
+	pub fn set_last_result(&mut self, value: f32) -> f32 {
 		self.last_result = Some(value);
 		value
 	}
 
-	pub(crate) fn init_std(&mut self) {
+	pub fn init_std(&mut self) {
 		self.assign_var("pi", PI);
 		self.assign_var("e", E);
 

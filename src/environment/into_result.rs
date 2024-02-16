@@ -1,6 +1,6 @@
 use crate::Error;
 
-pub(crate) trait IntoResult {
+pub trait IntoResult {
 	fn into_result(self) -> Result<f32, Error>;
 }
 
