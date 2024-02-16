@@ -45,14 +45,10 @@ fn main() {
 					Error::InvalidCharacter(_, pos) => {
 						print_error_position(&input, pos, pos);
 					}
-					Error::UnexpectedToken {
-						token: _,
-						start,
-						end,
-					} => {
+					Error::UnexpectedToken { start, end, .. } => {
 						print_error_position(&input, start, end);
 					}
-					Error::VariableNotFound { var: _, start, end } => {
+					Error::VariableNotFound { start, end, .. } => {
 						print_error_position(&input, start, end);
 					}
 				}

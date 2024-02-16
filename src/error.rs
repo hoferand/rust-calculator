@@ -22,19 +22,11 @@ impl std::fmt::Display for Error {
 		match self {
 			Self::Fatal(msg) => write!(f, "{}", msg),
 			Self::InvalidCharacter(ch, _) => write!(f, "Invalid character `{}` found!", ch),
-			Self::UnexpectedToken {
-				token,
-				start: _,
-				end: _,
-			} => {
+			Self::UnexpectedToken { token, .. } => {
 				write!(f, "Unexpected token `{}` found!", token)
 			}
 			Self::Runtime(msg) => write!(f, "{}", msg),
-			Self::VariableNotFound {
-				var,
-				start: _,
-				end: _,
-			} => write!(f, "Variable `{}` not found!", var),
+			Self::VariableNotFound { var, .. } => write!(f, "Variable `{}` not found!", var),
 			Self::UnexpectedEndOfInput => write!(f, "Unexpected end of input!"),
 		}
 	}

@@ -230,11 +230,7 @@ mod tests {
 		let mut calc = Calculator::new();
 
 		match calc.calculate("$") {
-			Err(Error::VariableNotFound {
-				var: _,
-				start: _,
-				end: _,
-			}) => (),
+			Err(Error::VariableNotFound { .. }) => (),
 			_ => panic!(),
 		}
 		assert_eq!(calc.calculate("4 + 5").unwrap(), 9.0);
