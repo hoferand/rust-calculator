@@ -5,140 +5,81 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, Error> {
 	let mut chars = input.chars().peekable();
 	let mut start = 0;
 	while let Some(char) = chars.next() {
+		let value;
+		let mut src = char.to_string();
 		match char {
-			' ' | '\n' | '\t' | '\r' => (), // ignore whitespaces
-			'(' => tokens.push(Token::new(
-				TokenValue::OpenBracket,
-				char.to_string(),
-				start,
-				start,
-			)),
-			')' => tokens.push(Token::new(
-				TokenValue::CloseBracket,
-				char.to_string(),
-				start,
-				start,
-			)),
-			'+' => tokens.push(Token::new(
-				TokenValue::AddOperator(AddOperator::Add),
-				char.to_string(),
-				start,
-				start,
-			)),
-			'-' => tokens.push(Token::new(
-				TokenValue::AddOperator(AddOperator::Sub),
-				char.to_string(),
-				start,
-				start,
-			)),
+			' ' | '\n' | '\t' | '\r' => {
+				// ignore whitespaces
+				start += 1;
+				continue;
+			}
+			'(' => value = TokenValue::OpenBracket,
+			')' => value = TokenValue::CloseBracket,
+			'+' => value = TokenValue::AddOperator(AddOperator::Add),
+			'-' => value = TokenValue::AddOperator(AddOperator::Sub),
 			'*' => match chars.peek() {
 				Some('*') => {
-					chars.next();
-					tokens.push(Token::new(
-						TokenValue::ExpOperator(ExpOperator::Power),
-						"**".to_owned(),
-						start,
-						start + 1,
-					));
-					start += 1;
+					src.push(chars.next().unwrap());
+					value = TokenValue::ExpOperator(ExpOperator::Power);
 				}
-				_ => tokens.push(Token::new(
-					TokenValue::MulOperator(MulOperator::Mul),
-					char.to_string(),
-					start,
-					start,
-				)),
+				_ => value = TokenValue::MulOperator(MulOperator::Mul),
 			},
 			'/' => match chars.peek() {
 				Some('/') => {
-					chars.next();
-					tokens.push(Token::new(
-						TokenValue::ExpOperator(ExpOperator::Root),
-						"//".to_owned(),
-						start,
-						start + 1,
-					));
-					start += 1;
+					src.push(chars.next().unwrap());
+					value = TokenValue::ExpOperator(ExpOperator::Root);
 				}
-				_ => tokens.push(Token::new(
-					TokenValue::MulOperator(MulOperator::Div),
-					char.to_string(),
-					start,
-					start,
-				)),
+				_ => value = TokenValue::MulOperator(MulOperator::Div),
 			},
-			'%' => tokens.push(Token::new(
-				TokenValue::MulOperator(MulOperator::Mod),
-				char.to_string(),
-				start,
-				start,
-			)),
-			'=' => tokens.push(Token::new(
-				TokenValue::Equals,
-				char.to_string(),
-				start,
-				start,
-			)),
-			'$' => tokens.push(Token::new(
-				TokenValue::LastResult,
-				char.to_string(),
-				start,
-				start,
-			)),
+			'%' => value = TokenValue::MulOperator(MulOperator::Mod),
+			'=' => value = TokenValue::Equals,
+			'$' => value = TokenValue::LastResult,
 			c if c.is_ascii_digit() => {
-				let mut value = c.to_string();
 				let mut point = false;
-				let mut end = start;
 				while let Some(n_char) = chars.peek() {
 					if n_char.is_numeric() || (*n_char == '.' && !point) {
 						if let Some(char) = chars.next() {
 							if char == '.' {
 								point = true;
 							}
-							value.push(char);
-							end += 1;
+							src.push(char);
 							continue;
 						}
 					}
 					break;
 				}
-				match value.parse() {
-					Ok(number) => {
-						tokens.push(Token::new(TokenValue::Number(number), value, start, end))
-					}
-					Err(_) => return Err(Error::Fatal("Cannot parse number!")),
+				match src.parse() {
+					Ok(number) => value = TokenValue::Number(number),
+					Err(_) => return Err(Error::Fatal("Cannot parse number!")), // should never happen
 				}
-				start = end;
 			}
 			c if c.is_ascii_alphabetic() || c == '_' => {
-				let mut value = c.to_string();
-				let mut end = start;
 				while let Some(n_char) = chars.peek() {
 					if n_char.is_ascii_alphanumeric() || *n_char == '_' {
 						if let Some(char) = chars.next() {
-							value.push(char);
-							end += 1;
+							src.push(char);
 							continue;
 						}
 					}
 					break;
 				}
-				if value == "let" {
-					tokens.push(Token::new(TokenValue::Let, value, start, end))
+				if src == "let" {
+					value = TokenValue::Let;
 				} else {
-					tokens.push(Token::new(
-						TokenValue::Identifier(value.clone()),
-						value,
-						start,
-						end,
-					))
+					value = TokenValue::Identifier(src.clone());
 				}
-				start = end;
 			}
 			c => return Err(Error::InvalidCharacter(c, start)),
 		}
 
-		start += 1;
+		let len = src.len();
+		tokens.push(Token {
+			value,
+			src,
+			start,
+			end: start + len - 1,
+		});
+		start += len;
 	}
 	tokens.push(Token::new(TokenValue::Eof, "EOF".to_owned(), start, start));
 
