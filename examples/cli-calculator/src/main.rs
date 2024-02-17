@@ -27,13 +27,14 @@ fn main() {
 	calculator.add_fn("div", div);
 
 	// read expressions
-	let mut rl = DefaultEditor::new().expect("");
+	let mut rl = DefaultEditor::new().expect("Failed to create new editor!");
 	while let Ok(input) = rl.readline("> ") {
 		if input.is_empty() {
 			break;
 		}
 
-		rl.add_history_entry(&input).expect("");
+		rl.add_history_entry(&input)
+			.expect("Failed to add history entry!");
 
 		// evaluate line
 		match calculator.calculate(&input) {
