@@ -1,11 +1,13 @@
 <!-- PROJECT NAME -->
 # Calculator
+
 A simple Rust library for evaluating mathematical expressions.
 
 
 
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents
+
  1. [About The Project](#about-the-project)
  2. [Getting Started](#getting-started)
  3. [Usage](#usage)
@@ -72,6 +74,7 @@ fn main() {
 ## Features
 
 ### Numbers
+
 You can use integer `45` as well as floating point values `45.43`.
 
 
