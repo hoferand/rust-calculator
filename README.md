@@ -8,8 +8,8 @@ A simple Rust library for evaluating mathematical expressions.
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents
 
- 1. [About The Project](#about-the-project)
- 2. [Getting Started](#getting-started)
+ 1. [About the project](#about-the-project)
+ 2. [Getting started](#getting-started)
  3. [Usage](#usage)
  4. [Features](#features)
  5. [License](#license)
@@ -17,7 +17,7 @@ A simple Rust library for evaluating mathematical expressions.
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## About the project
 
 A simple calculator library using a lexer and parser for evaluating mathematical expressions.  
 First the input gets split into single tokens e.g.: `4.5 + 5` => [`4.5`, `+`, `5`]  
@@ -26,7 +26,7 @@ These tokens are now used by the parser to calculate the result e.g.: [`4.5`, `+
 
 
 <!-- GETTING STARTED -->
-## Getting Started
+## Getting started
 
 For using this calculator you only have to install the Rust language.  
 Instruction for installing it can be found here: [Install Rust](https://www.rust-lang.org/tools/install).  
@@ -78,7 +78,7 @@ fn main() {
 You can use integer `45` as well as floating point values `45.43`.
 
 
-### Supported Operators
+### Supported operators
 
  - Addition: `+`
  - Subtraction: `-`
@@ -119,12 +119,12 @@ Predefined variables:
 ### Functions
 
 Predefined functions (All trigonometric functions uses radiants):
- - Sinus: `sin`
- - Arcus-Sinus: `asin`
- - Cosinus: `cos`
- - Arcus-Cosinus: `acos`
- - Tangens: `tan`
- - Arcus-Tangens: `atan`
+ - Sine: `sin`
+ - Arcus-Sine: `asin`
+ - Cosine: `cos`
+ - Arcus-Cosine: `acos`
+ - Tangent: `tan`
+ - Arcus-Tangent: `atan`
  - Radiants to Degrees: `r2d`
  - Degrees to Radiants: `d2r`
 
@@ -156,15 +156,15 @@ fn main() {
 ```
 
 
-### Operation Precedence
+### Operator precedence
 
  1. Numbers / Variables: `3`, `4.5`, `var`, etc
  2. Brackets: `( ... )`
  3. Signs: `+`, `-`
  4. Function calls: `r2d`, `sin`, etc
- 5. Exponential Operators: `**`, `//`
- 6. Multiplicative Operators: `*`, `/`, `%`
- 7. Additions Operators: `+`, `-`
+ 5. Exponential operators: `**`, `//`
+ 6. Multiplicative operators: `*`, `/`, `%`
+ 7. Additions operators: `+`, `-`
 
 So `5 + -4 * 5 + r2d pi + 12` is evaluated as `5 + ((-4) * 5) + (r2d pi) + 12`.
 
